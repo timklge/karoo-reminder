@@ -1,6 +1,7 @@
 package de.timklge.karooreminder.screens
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -86,9 +87,15 @@ fun ReminderAppNavHost(modifier: Modifier = Modifier, navController: NavHostCont
     val ctx = LocalContext.current
     LaunchedEffect(Unit) {
         ctx.dataStore.data.distinctUntilChanged().collect { t ->
-            val entries = Json.decodeFromString<MutableList<Reminder>>(t[preferencesKey] ?: defaultReminders)
             reminders.clear()
-            reminders.addAll(entries)
+            try {
+                val entries = Json.decodeFromString<MutableList<Reminder>>(
+                    t[preferencesKey] ?: defaultReminders
+                )
+                reminders.addAll(entries)
+            } catch(e: Throwable){
+                Log.e("karoo-reminder","Failed to read preferences", e)
+            }
         }
     }
 

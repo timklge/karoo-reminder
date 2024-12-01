@@ -3,14 +3,32 @@ package de.timklge.karooreminder.screens
 import android.content.Context
 import androidx.core.content.ContextCompat
 import de.timklge.karooreminder.R
+import io.hammerhead.karooext.models.PlayBeepPattern
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Serializable
+enum class ReminderBeepPattern(val displayName: String, val tones: List<PlayBeepPattern.Tone>) {
+    NO_TONES("No tones", emptyList()),
+    THREE_TONES_UP("Three tones up", listOf(PlayBeepPattern.Tone(500, 200), PlayBeepPattern.Tone(700, 200), PlayBeepPattern.Tone(900, 200))),
+    THREE_TONES_DOWN("Three tones down", listOf(PlayBeepPattern.Tone(900, 200), PlayBeepPattern.Tone(700, 200), PlayBeepPattern.Tone(400, 200))),
+    DOUBLE_HIGH("Double high", listOf(
+        PlayBeepPattern.Tone(400, 400),
+        PlayBeepPattern.Tone(0, 200),
+        PlayBeepPattern.Tone(600, 200),
+        PlayBeepPattern.Tone(0, 200),
+        PlayBeepPattern.Tone(600, 200),
+        PlayBeepPattern.Tone(0, 200),
+        PlayBeepPattern.Tone(400, 400))
+    )
+}
+
+@Serializable
 class Reminder(val id: Int, var name: String, var interval: Int, var text: String,
                var foregroundColor: Int = android.graphics.Color.parseColor("#700000"),
-               val isActive: Boolean = true){
+               val isActive: Boolean = true, val isAutoDismiss: Boolean = true,
+               val tone: ReminderBeepPattern = ReminderBeepPattern.THREE_TONES_UP){
 
     fun getResourceColor(context: Context): Int {
         return when(foregroundColor){

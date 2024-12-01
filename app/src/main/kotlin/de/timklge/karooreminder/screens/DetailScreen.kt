@@ -1,6 +1,7 @@
 package de.timklge.karooreminder.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,28 +13,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import com.maxkeppeker.sheets.core.models.base.UseCaseState
 import com.maxkeppeler.sheets.color.ColorDialog
@@ -51,19 +59,31 @@ import com.maxkeppeler.sheets.color.models.ColorSelectionMode
 import com.maxkeppeler.sheets.color.models.MultipleColors
 import com.maxkeppeler.sheets.color.models.SingleColor
 import de.timklge.karooreminder.R
+import io.hammerhead.karooext.KarooSystemService
+import io.hammerhead.karooext.models.PlayBeepPattern
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedReminder: Reminder?) -> Unit, onCancel: () -> Unit){
+    val ctx = LocalContext.current
+    val karooSystem = remember { KarooSystemService(ctx) }
+    LaunchedEffect(Unit) {
+        karooSystem.connect{}
+    }
     var title by remember { mutableStateOf(reminder.name) }
     var text by remember { mutableStateOf(reminder.text) }
     var selectedColor by remember { mutableIntStateOf(reminder.foregroundColor) }
     val colorDialogState by remember { mutableStateOf(UseCaseState()) }
     var duration by remember { mutableStateOf(reminder.interval.toString()) }
     var isActive by remember { mutableStateOf(reminder.isActive) }
+    var autoDismiss by remember { mutableStateOf(reminder.isAutoDismiss) }
     var deleteDialogVisible by remember { mutableStateOf(false) }
+    var toneDialogVisible by remember { mutableStateOf(false) }
+    var selectedTone by remember { mutableStateOf(reminder.tone) }
 
-    fun getUpdatedReminder(): Reminder = Reminder(reminder.id, title, duration.toIntOrNull() ?: 0, text, selectedColor, isActive)
+    fun getUpdatedReminder(): Reminder = Reminder(reminder.id, title, duration.toIntOrNull() ?: 0,
+        text, selectedColor, isActive, isAutoDismiss = autoDismiss, tone = selectedTone)
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -116,9 +136,26 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                         .shadow(5.dp, CircleShape)
                         .width(40.dp), content = {})
 
-                Spacer(modifier = Modifier.width(20.dp))
+                Spacer(modifier = Modifier.width(5.dp))
 
                 Text("Change Color")
+            }
+
+            FilledTonalButton(modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+                onClick = {
+                    toneDialogVisible = true
+                }) {
+                Icon(Icons.Default.Build, contentDescription = "Change Tone")
+                Spacer(modifier = Modifier.width(5.dp))
+                Text("Change Tone")
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(checked = autoDismiss, onCheckedChange = { autoDismiss = it})
+                Spacer(modifier = Modifier.width(10.dp))
+                Text("Auto-Dismiss")
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -133,6 +170,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 onSubmit(getUpdatedReminder())
             }) {
                 Icon(Icons.Default.Done, contentDescription = "Save Reminder")
+                Spacer(modifier = Modifier.width(5.dp))
                 Text("Save")
             }
 
@@ -142,6 +180,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 onCancel()
             }) {
                 Icon(Icons.Default.Close, contentDescription = "Cancel Editing")
+                Spacer(modifier = Modifier.width(5.dp))
                 Text("Cancel")
             }
 
@@ -168,6 +207,64 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                     }) { Text("Cancel") }
                 },
                 title = { Text("Delete reminder") }, text = { Text("Really delete this reminder?") })
+            }
+
+            if (toneDialogVisible){
+                Dialog(onDismissRequest = { toneDialogVisible = false }) {
+                    var dialogSelectedTone by remember { mutableStateOf(selectedTone) }
+                    val coroutineScope = rememberCoroutineScope()
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                    ) {
+                        Column(modifier = Modifier
+                            .padding(5.dp)
+                            .verticalScroll(rememberScrollState())
+                            .fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                            ReminderBeepPattern.entries.forEach { pattern ->
+                                Row(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        dialogSelectedTone = pattern
+                                        karooSystem.dispatch(PlayBeepPattern(pattern.tones))
+                                    }, verticalAlignment = Alignment.CenterVertically) {
+                                    RadioButton(selected = dialogSelectedTone == pattern, onClick = {
+                                        dialogSelectedTone = pattern
+                                        karooSystem.dispatch(PlayBeepPattern(pattern.tones))
+                                    })
+                                    Text(
+                                        text = pattern.displayName,
+                                        modifier = Modifier.padding(start = 10.dp)
+                                    )
+                                }
+                            }
+
+                            FilledTonalButton(modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp), onClick = {
+                                selectedTone = dialogSelectedTone
+                                toneDialogVisible = false
+                            }) {
+                                Icon(Icons.Default.Done, contentDescription = "Save")
+                                Text("Save")
+                            }
+
+                            FilledTonalButton(modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp), onClick = {
+                                toneDialogVisible = false
+                            }) {
+                                Icon(Icons.Default.Close, contentDescription = "Cancel")
+                                Text("Cancel")
+                            }
+
+                        }
+                    }
+                }
             }
         }
     }

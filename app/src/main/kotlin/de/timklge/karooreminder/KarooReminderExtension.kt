@@ -1,6 +1,8 @@
 package de.timklge.karooreminder
 
+import android.util.Log
 import de.timklge.karooreminder.screens.Reminder
+import de.timklge.karooreminder.screens.ReminderBeepPattern
 import de.timklge.karooreminder.screens.defaultReminders
 import de.timklge.karooreminder.screens.preferencesKey
 import io.hammerhead.karooext.KarooSystemService
@@ -41,7 +43,14 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0") {
             }
 
             val preferences = applicationContext.dataStore.data.map { remindersJson ->
-                Json.decodeFromString<MutableList<Reminder>>(remindersJson[preferencesKey]  ?: defaultReminders)
+                try {
+                    Json.decodeFromString<MutableList<Reminder>>(
+                        remindersJson[preferencesKey] ?: defaultReminders
+                    )
+                } catch(e: Throwable){
+                    Log.e("karoo-reminder","Failed to read preferences", e)
+                    mutableListOf()
+                }
             }
 
             karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)
@@ -50,19 +59,20 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0") {
                 .distinctUntilChanged()
                 .drop(1)
                 .combine(preferences) { elapsedMinutes, reminders -> elapsedMinutes to reminders}
+                .distinctUntilChanged { old, new -> old.first == new.first }
                 .collect { (elapsedMinutes, reminders) ->
                     reminders
                         .filter { reminder -> reminder.isActive && elapsedMinutes % reminder.interval == 0 }
                         .forEach { reminder ->
                             karooSystem.dispatch(TurnScreenOn)
                             delay(1_000)
-                            karooSystem.dispatch(PlayBeepPattern(listOf(PlayBeepPattern.Tone(300, 200), PlayBeepPattern.Tone(500, 200), PlayBeepPattern.Tone(700, 200))))
+                            if (reminder.tone != ReminderBeepPattern.NO_TONES) karooSystem.dispatch(PlayBeepPattern(reminder.tone.tones))
                             karooSystem.dispatch(
                                 InRideAlert(
                                     id = "reminder-${reminder.id}-${elapsedMinutes}",
                                     detail = reminder.text,
                                     title = reminder.name,
-                                    autoDismissMs = 15_000,
+                                    autoDismissMs = if(reminder.isAutoDismiss) 15_000 else null,
                                     icon = R.drawable.ic_launcher,
                                     textColor = R.color.white,
                                     backgroundColor = reminder.getResourceColor(applicationContext)
