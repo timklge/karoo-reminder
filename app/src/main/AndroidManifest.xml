@@ -29,6 +29,11 @@
                 android:name="io.hammerhead.karooext.EXTENSION_INFO"
                 android:resource="@xml/extension_info" />
         </service>
+
+        <!-- Provide Karoo System with information about delivery of your app -->
+        <meta-data
+            android:name="io.hammerhead.karooext.MANIFEST_URL"
+            android:value="https://github.com/timklge/karoo-reminder/releases/latest/download/manifest.json" />
     </application>
 
 </manifest>
