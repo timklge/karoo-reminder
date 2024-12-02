@@ -26,6 +26,10 @@ import kotlinx.serialization.json.Json
 
 class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0") {
 
+    companion object {
+        const val TAG = "karoo-reminder"
+    }
+
     lateinit var karooSystem: KarooSystemService
 
     private var serviceJob: Job? = null
@@ -38,7 +42,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0") {
         serviceJob = CoroutineScope(Dispatchers.IO).launch {
             karooSystem.connect { connected ->
                 if (connected) {
-                    println("Connected")
+                    Log.i(TAG, "Connected")
                 }
             }
 
@@ -48,7 +52,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0") {
                         remindersJson[preferencesKey] ?: defaultReminders
                     )
                 } catch(e: Throwable){
-                    Log.e("karoo-reminder","Failed to read preferences", e)
+                    Log.e(TAG,"Failed to read preferences", e)
                     mutableListOf()
                 }
             }

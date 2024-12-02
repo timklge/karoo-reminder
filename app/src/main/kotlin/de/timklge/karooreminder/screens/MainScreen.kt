@@ -54,6 +54,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import de.timklge.karooreminder.KarooReminderExtension
 import de.timklge.karooreminder.dataStore
 import de.timklge.karooreminder.streamDataFlow
 import de.timklge.karooreminder.streamRideState
@@ -94,7 +95,7 @@ fun ReminderAppNavHost(modifier: Modifier = Modifier, navController: NavHostCont
                 )
                 reminders.addAll(entries)
             } catch(e: Throwable){
-                Log.e("karoo-reminder","Failed to read preferences", e)
+                Log.e(KarooReminderExtension.TAG,"Failed to read preferences", e)
             }
         }
     }
