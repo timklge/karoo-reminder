@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -61,7 +62,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0") {
                 .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
                 .map { (it / 1000 / 60).toInt() }
                 .distinctUntilChanged()
-                .drop(1)
+                .filterNot { it == 0 }
                 .combine(preferences) { elapsedMinutes, reminders -> elapsedMinutes to reminders}
                 .distinctUntilChanged { old, new -> old.first == new.first }
                 .collect { (elapsedMinutes, reminders) ->
