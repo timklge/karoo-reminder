@@ -16,9 +16,10 @@ extensions like this. Until it is available, you can sideload the app.
 2. Set up your Karoo for sideloading. DC Rainmaker has a great [step-by-step guide](https://www.dcrainmaker.com/2021/02/how-to-sideload-android-apps-on-your-hammerhead-karoo-1-karoo-2.html).
 3. Install the app by running `adb install app-release.apk`.
 
-## Icon
+## Credits
 
-Icon is `timers` by [boxicons.com](https://boxicons.com) (MIT-licensed).
+- Icon is `timers` by [boxicons.com](https://boxicons.com) (MIT-licensed).
+- Reminder sound played over bluetooth is `SweetAlertSound5.wav` by `KIZILSUNGUR` from [freesound.org](https://freesound.org/people/KIZILSUNGUR/sounds/72129/) (CC0).
 
 ## Links
 

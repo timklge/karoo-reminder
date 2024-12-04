@@ -1,5 +1,6 @@
 package de.timklge.karooreminder
 
+import android.media.MediaPlayer
 import android.util.Log
 import de.timklge.karooreminder.screens.Reminder
 import de.timklge.karooreminder.screens.ReminderBeepPattern
@@ -25,7 +26,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.3") {
+class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.4") {
 
     companion object {
         const val TAG = "karoo-reminder"
@@ -39,6 +40,8 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.3") {
         super.onCreate()
 
         karooSystem = KarooSystemService(applicationContext)
+
+        val mediaPlayer = MediaPlayer.create(this, R.raw.reminder)
 
         serviceJob = CoroutineScope(Dispatchers.IO).launch {
             karooSystem.connect { connected ->
@@ -71,7 +74,10 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.3") {
                         .forEach { reminder ->
                             karooSystem.dispatch(TurnScreenOn)
                             delay(1_000)
-                            if (reminder.tone != ReminderBeepPattern.NO_TONES) karooSystem.dispatch(PlayBeepPattern(reminder.tone.tones))
+                            if (reminder.tone != ReminderBeepPattern.NO_TONES){
+                                karooSystem.dispatch(PlayBeepPattern(reminder.tone.tones))
+                                mediaPlayer.start()
+                            }
                             karooSystem.dispatch(
                                 InRideAlert(
                                     id = "reminder-${reminder.id}-${elapsedMinutes}",
