@@ -31,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -56,15 +55,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import de.timklge.karooreminder.KarooReminderExtension
 import de.timklge.karooreminder.dataStore
-import de.timklge.karooreminder.streamDataFlow
-import de.timklge.karooreminder.streamRideState
 import io.hammerhead.karooext.KarooSystemService
-import io.hammerhead.karooext.models.DataType
-import io.hammerhead.karooext.models.RideState
-import io.hammerhead.karooext.models.StreamState
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -158,11 +150,6 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
     var karooConnected by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
     val karooSystem = remember { KarooSystemService(ctx) }
-    val rideState: RideState by karooSystem.streamRideState().collectAsState(RideState.Idle)
-    val rideTime by karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)
-        .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
-        .map { (it / 1000 / 60).toInt() }
-        .collectAsState(initial = 0)
 
     Scaffold(
         topBar = { TopAppBar(title = {Text("Reminder")}) },
@@ -218,15 +205,7 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
 
                 if (reminders.isEmpty()) Text(modifier = Modifier.padding(5.dp), text = "No reminders added.")
 
-                if (karooConnected){
-                    val hardwareName = karooSystem.hardwareType?.name ?: "unknown device"
-                    val state = when (rideState){
-                        RideState.Idle -> "No ride started"
-                        is RideState.Paused -> "Ride is paused. Riding for $rideTime minutes"
-                        RideState.Recording -> "Currently riding. Riding for $rideTime minutes"
-                    }
-                    Text(modifier = Modifier.padding(5.dp), text = "Running on $hardwareName. $state.")
-                } else {
+                if (!karooConnected){
                     Text(modifier = Modifier.padding(5.dp), text = "Could not read device status. Is your Karoo updated?")
                 }
             }
