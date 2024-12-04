@@ -28,7 +28,8 @@ enum class ReminderBeepPattern(val displayName: String, val tones: List<PlayBeep
 class Reminder(val id: Int, var name: String, var interval: Int, var text: String,
                var foregroundColor: Int = android.graphics.Color.parseColor("#700000"),
                val isActive: Boolean = true, val isAutoDismiss: Boolean = true,
-               val tone: ReminderBeepPattern = ReminderBeepPattern.THREE_TONES_UP){
+               val tone: ReminderBeepPattern = ReminderBeepPattern.THREE_TONES_UP,
+               val autoDismissSeconds: Int = 15){
 
     fun getResourceColor(context: Context): Int {
         return when(foregroundColor){

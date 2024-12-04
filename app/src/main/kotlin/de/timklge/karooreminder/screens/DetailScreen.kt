@@ -40,7 +40,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,7 +60,6 @@ import com.maxkeppeler.sheets.color.models.SingleColor
 import de.timklge.karooreminder.R
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.PlayBeepPattern
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,9 +79,10 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var deleteDialogVisible by remember { mutableStateOf(false) }
     var toneDialogVisible by remember { mutableStateOf(false) }
     var selectedTone by remember { mutableStateOf(reminder.tone) }
+    var autoDismissSeconds by remember { mutableStateOf(reminder.autoDismissSeconds.toString()) }
 
-    fun getUpdatedReminder(): Reminder = Reminder(reminder.id, title, duration.toIntOrNull() ?: 0,
-        text, selectedColor, isActive, isAutoDismiss = autoDismiss, tone = selectedTone)
+    fun getUpdatedReminder(): Reminder = Reminder(reminder.id, title, duration.toIntOrNull() ?: 1,
+        text, selectedColor, isActive, isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15)
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -158,6 +157,16 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 Text("Auto-Dismiss")
             }
 
+            if (autoDismiss){
+                OutlinedTextField(value = autoDismissSeconds, modifier = Modifier.fillMaxWidth(),
+                    onValueChange = { autoDismissSeconds = it },
+                    label = { Text("Display duration") },
+                    suffix = { Text("s") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+            }
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(checked = isActive, onCheckedChange = { isActive = it})
                 Spacer(modifier = Modifier.width(10.dp))
@@ -212,7 +221,6 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             if (toneDialogVisible){
                 Dialog(onDismissRequest = { toneDialogVisible = false }) {
                     var dialogSelectedTone by remember { mutableStateOf(selectedTone) }
-                    val coroutineScope = rememberCoroutineScope()
 
                     Card(
                         modifier = Modifier
@@ -261,7 +269,6 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                                 Icon(Icons.Default.Close, contentDescription = "Cancel")
                                 Text("Cancel")
                             }
-
                         }
                     }
                 }

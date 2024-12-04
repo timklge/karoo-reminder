@@ -56,6 +56,7 @@ import androidx.navigation.navArgument
 import de.timklge.karooreminder.KarooReminderExtension
 import de.timklge.karooreminder.dataStore
 import io.hammerhead.karooext.KarooSystemService
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
@@ -151,6 +152,12 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
     val ctx = LocalContext.current
     val karooSystem = remember { KarooSystemService(ctx) }
 
+    var showWarnings by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(1000L)
+        showWarnings = true
+    }
+
     Scaffold(
         topBar = { TopAppBar(title = {Text("Reminder")}) },
         floatingActionButtonPosition = FabPosition.End,
@@ -203,10 +210,12 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
                     }
                 }
 
-                if (reminders.isEmpty()) Text(modifier = Modifier.padding(5.dp), text = "No reminders added.")
+                if (showWarnings){
+                    if (reminders.isEmpty()) Text(modifier = Modifier.padding(5.dp), text = "No reminders added.")
 
-                if (!karooConnected){
-                    Text(modifier = Modifier.padding(5.dp), text = "Could not read device status. Is your Karoo updated?")
+                    if (!karooConnected){
+                        Text(modifier = Modifier.padding(5.dp), text = "Could not read device status. Is your Karoo updated?")
+                    }
                 }
             }
         }

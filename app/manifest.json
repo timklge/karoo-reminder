@@ -7,5 +7,5 @@
   "latestVersionCode": 4,
   "developer": "timklge",
   "description": "Simple karoo extension that shows in-ride alerts every X minutes",
-  "releaseNotes": "Fix reminders are shown immediately on start of the second ride after system start"
+  "releaseNotes": "Added display duration setting"
 }

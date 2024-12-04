@@ -77,7 +77,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.3") {
                                     id = "reminder-${reminder.id}-${elapsedMinutes}",
                                     detail = reminder.text,
                                     title = reminder.name,
-                                    autoDismissMs = if(reminder.isAutoDismiss) 15_000 else null,
+                                    autoDismissMs = if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
                                     icon = R.drawable.ic_launcher,
                                     textColor = R.color.white,
                                     backgroundColor = reminder.getResourceColor(applicationContext)
