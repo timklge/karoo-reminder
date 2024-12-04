@@ -3,8 +3,8 @@
   "packageName": "de.timklge.karooreminder",
   "iconUrl": "https://github.com/timklge/karoo-reminder/releases/latest/download/karoo-reminder.png",
   "latestApkUrl": "https://github.com/timklge/karoo-reminder/releases/latest/download/app-release.apk",
-  "latestVersion": "1.0.2",
-  "latestVersionCode": 3,
+  "latestVersion": "1.0.3",
+  "latestVersionCode": 4,
   "developer": "timklge",
   "description": "Simple karoo extension that shows in-ride alerts every X minutes",
   "releaseNotes": "Fix reminders are shown immediately on start of the second ride after system start"
