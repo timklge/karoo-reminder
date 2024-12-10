@@ -1,5 +1,6 @@
 package de.timklge.karooreminder
 
+import android.content.Intent
 import android.media.MediaPlayer
 import android.util.Log
 import de.timklge.karooreminder.screens.Reminder
@@ -26,7 +27,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.4") {
+class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.5") {
 
     companion object {
         const val TAG = "karoo-reminder"
@@ -73,7 +74,15 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.4") {
                         .filter { reminder -> reminder.isActive && elapsedMinutes % reminder.interval == 0 }
                         .forEach { reminder ->
                             karooSystem.dispatch(TurnScreenOn)
+
+                            val intent = Intent("de.timklge.HIDE_POWERBAR").apply {
+                                putExtra("duration", (if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else 15_000L) + 1000L)
+                                putExtra("location", "top")
+                            }
+
                             delay(1_000)
+                            applicationContext.sendBroadcast(intent)
+
                             if (reminder.tone != ReminderBeepPattern.NO_TONES){
                                 karooSystem.dispatch(PlayBeepPattern(reminder.tone.tones))
                                 mediaPlayer.start()
