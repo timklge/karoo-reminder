@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -27,7 +28,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.5") {
+class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.6") {
 
     companion object {
         const val TAG = "karoo-reminder"
@@ -69,35 +70,39 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.5") {
                 .filterNot { it == 0 }
                 .combine(preferences) { elapsedMinutes, reminders -> elapsedMinutes to reminders}
                 .distinctUntilChanged { old, new -> old.first == new.first }
-                .collect { (elapsedMinutes, reminders) ->
-                    reminders
+                .collectLatest { (elapsedMinutes, reminders) ->
+                    val rs = reminders
                         .filter { reminder -> reminder.isActive && elapsedMinutes % reminder.interval == 0 }
-                        .forEach { reminder ->
-                            karooSystem.dispatch(TurnScreenOn)
 
-                            val intent = Intent("de.timklge.HIDE_POWERBAR").apply {
-                                putExtra("duration", (if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else 15_000L) + 1000L)
-                                putExtra("location", "top")
-                            }
+                    for (reminder in rs){
+                        karooSystem.dispatch(TurnScreenOn)
 
-                            delay(1_000)
-                            applicationContext.sendBroadcast(intent)
+                        val intent = Intent("de.timklge.HIDE_POWERBAR").apply {
+                            putExtra("duration", (if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else 15_000L) + 1000L)
+                            putExtra("location", "top")
+                        }
 
-                            if (reminder.tone != ReminderBeepPattern.NO_TONES){
-                                karooSystem.dispatch(PlayBeepPattern(reminder.tone.tones))
-                                mediaPlayer.start()
-                            }
-                            karooSystem.dispatch(
-                                InRideAlert(
-                                    id = "reminder-${reminder.id}-${elapsedMinutes}",
-                                    detail = reminder.text,
-                                    title = reminder.name,
-                                    autoDismissMs = if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
-                                    icon = R.drawable.ic_launcher,
-                                    textColor = R.color.white,
-                                    backgroundColor = reminder.getResourceColor(applicationContext)
-                                ),
-                            )
+                        delay(1_000)
+                        applicationContext.sendBroadcast(intent)
+
+                        if (reminder.tone != ReminderBeepPattern.NO_TONES){
+                            karooSystem.dispatch(PlayBeepPattern(reminder.tone.tones))
+                            mediaPlayer.start()
+                        }
+                        karooSystem.dispatch(
+                            InRideAlert(
+                                id = "reminder-${reminder.id}-${elapsedMinutes}",
+                                detail = reminder.text,
+                                title = reminder.name,
+                                autoDismissMs = if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
+                                icon = R.drawable.ic_launcher,
+                                textColor = R.color.white,
+                                backgroundColor = reminder.getResourceColor(applicationContext)
+                            ),
+                        )
+
+                        val delayMs = if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else 20000L
+                        delay(delayMs)
                     }
                 }
         }
