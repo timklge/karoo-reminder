@@ -15,8 +15,8 @@ android {
         applicationId = "de.timklge.karooreminder"
         minSdk = 26
         targetSdk = 34
-        versionCode = 7
-        versionName = "1.0.6"
+        versionCode = 8
+        versionName = "1.0.7"
     }
 
     signingConfigs {

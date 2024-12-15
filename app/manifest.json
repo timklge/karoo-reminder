@@ -3,9 +3,9 @@
   "packageName": "de.timklge.karooreminder",
   "iconUrl": "https://github.com/timklge/karoo-reminder/releases/latest/download/karoo-reminder.png",
   "latestApkUrl": "https://github.com/timklge/karoo-reminder/releases/latest/download/app-release.apk",
-  "latestVersion": "1.0.6",
-  "latestVersionCode": 7,
+  "latestVersion": "1.0.7",
+  "latestVersionCode": 8,
   "developer": "timklge",
   "description": "Simple karoo extension that shows in-ride alerts every X minutes",
-  "releaseNotes": "Added display duration setting, bluetooth alert sound"
+  "releaseNotes": "Added display duration setting, bluetooth alert sound. Built via Github CD"
 }

@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.6") {
+class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.7") {
 
     companion object {
         const val TAG = "karoo-reminder"
