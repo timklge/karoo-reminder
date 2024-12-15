@@ -16,6 +16,10 @@ jobs:
       run: |
         echo "GPR_USER=${{ github.actor }}" >> $GITHUB_ENV
         echo "GPR_KEY=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+        echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
+        echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
+        echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+        echo "KEYSTORE_BASE64=${{ secrets.KEYSTORE_BASE64 }}" >> $GITHUB_ENV
 
     - uses: actions/checkout@v4
     - name: set up JDK 17
