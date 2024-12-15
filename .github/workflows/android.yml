@@ -39,11 +39,8 @@ jobs:
     - name: Archive APK
       uses: actions/upload-artifact@v4
       with:
-        name: app-artifacts
-        path: |
-          app/build/outputs/apk/release/app-release.apk
-          app/manifest.json
-          app/karoo-reminder.png
+        name: app-release
+        path: app/build/outputs/apk/release/app-release.apk
 
     - name: Create Release
       id: create_release
