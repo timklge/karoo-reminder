@@ -1,5 +1,7 @@
 # Karoo Reminder Extension
 
+[![Build](https://github.com/timklge/karoo-reminder/actions/workflows/android.yml/badge.svg)](https://github.com/timklge/karoo-reminder/actions/workflows/android.yml)
+
 Basic karoo extension that shows in-ride alerts every X minutes. For Karoo 2 and Karoo 3 devices.
 
 ![Reminder List](list.png)
