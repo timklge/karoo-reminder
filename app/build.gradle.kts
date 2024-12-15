@@ -27,9 +27,7 @@ android {
 
             val base64keystore: String = env["KEYSTORE_BASE64"] ?: ""
             val keystoreFile: File = File.createTempFile("keystore", ".jks")
-            if (base64keystore.isNotEmpty()){
-                keystoreFile.writeText(String(Base64.decode(base64keystore)))
-            }
+            keystoreFile.writeBytes(Base64.decode(base64keystore))
             storeFile = keystoreFile
             storePassword = env["KEYSTORE_PASSWORD"]
         }
