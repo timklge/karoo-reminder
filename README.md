@@ -1,6 +1,8 @@
 # Karoo Reminder Extension
 
 [![Build](https://github.com/timklge/karoo-reminder/actions/workflows/android.yml/badge.svg)](https://github.com/timklge/karoo-reminder/actions/workflows/android.yml)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/timklge/karoo-reminder/total)
+![GitHub License](https://img.shields.io/github/license/timklge/karoo-reminder)
 
 Basic karoo extension that shows in-ride alerts every X minutes. For Karoo 2 and Karoo 3 devices.
 
