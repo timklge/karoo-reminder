@@ -37,7 +37,7 @@ enum class ReminderTrigger(val id: String, val label: String) {
     POWER_LIMIT_MINIMUM_EXCEEDED("power_limit_min", "Power below value")
 }
 
-class KarooReminderExtension : KarooExtension("karoo-reminder", "1.0.7") {
+class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1") {
 
     companion object {
         const val TAG = "karoo-reminder"
