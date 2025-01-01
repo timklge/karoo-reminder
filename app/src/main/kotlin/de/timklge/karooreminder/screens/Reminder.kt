@@ -27,7 +27,7 @@ enum class ReminderBeepPattern(val displayName: String, val tones: List<PlayBeep
 
 @Serializable
 class Reminder(val id: Int, var name: String, var interval: Int, var text: String,
-               var foregroundColor: Int = android.graphics.Color.parseColor("#700000"),
+               var foregroundColor: Int = android.graphics.Color.parseColor("#FF6060"),
                val isActive: Boolean = true, val isAutoDismiss: Boolean = true,
                val tone: ReminderBeepPattern = ReminderBeepPattern.THREE_TONES_UP,
                var trigger: ReminderTrigger = ReminderTrigger.ELAPSED_TIME,
