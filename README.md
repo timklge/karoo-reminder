@@ -9,6 +9,7 @@ Karoo extension that displays in-ride alerts based on custom triggers. Reminders
 ![Reminder List](list.png)
 ![Reminder Detail](detail.png)
 ![Reminder in ride](inride.png)
+![Cadence reminder](cadence.png)
 
 ## Installation
 
