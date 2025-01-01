@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColor
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -55,7 +56,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import de.timklge.karooreminder.KarooReminderExtension
 import de.timklge.karooreminder.dataStore
+import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
+import io.hammerhead.karooext.models.UserProfile
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -153,6 +156,8 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
     val karooSystem = remember { KarooSystemService(ctx) }
 
     var showWarnings by remember { mutableStateOf(false) }
+    val profile by karooSystem.streamUserProfile().collectAsStateWithLifecycle(null)
+
     LaunchedEffect(Unit) {
         delay(1000L)
         showWarnings = true
@@ -199,7 +204,7 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
 
                             Spacer(Modifier.weight(1.0f))
 
-                            Text("${reminder.interval}min")
+                            Text("${reminder.trigger.getPrefix()}${reminder.interval}${reminder.trigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL)}")
                         }
                     }
                 }

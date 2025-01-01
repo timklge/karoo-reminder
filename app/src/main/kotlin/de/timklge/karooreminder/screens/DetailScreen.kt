@@ -50,6 +50,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.maxkeppeker.sheets.core.models.base.UseCaseState
 import com.maxkeppeler.sheets.color.ColorDialog
 import com.maxkeppeler.sheets.color.models.ColorConfig
@@ -57,9 +58,14 @@ import com.maxkeppeler.sheets.color.models.ColorSelection
 import com.maxkeppeler.sheets.color.models.ColorSelectionMode
 import com.maxkeppeler.sheets.color.models.MultipleColors
 import com.maxkeppeler.sheets.color.models.SingleColor
+import de.timklge.karooreminder.Dropdown
+import de.timklge.karooreminder.DropdownOption
 import de.timklge.karooreminder.R
+import de.timklge.karooreminder.ReminderTrigger
+import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.PlayBeepPattern
+import io.hammerhead.karooext.models.UserProfile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,9 +86,16 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var toneDialogVisible by remember { mutableStateOf(false) }
     var selectedTone by remember { mutableStateOf(reminder.tone) }
     var autoDismissSeconds by remember { mutableStateOf(reminder.autoDismissSeconds.toString()) }
+    var selectedTrigger by remember { mutableStateOf(reminder.trigger) }
+
+    val profile by karooSystem.streamUserProfile().collectAsStateWithLifecycle(null)
 
     fun getUpdatedReminder(): Reminder = Reminder(reminder.id, title, duration.toIntOrNull() ?: 1,
-        text, selectedColor, isActive, isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15)
+        text = text,
+        foregroundColor = selectedColor,
+        isActive = isActive,
+        trigger = selectedTrigger,
+        isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15)
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -96,10 +109,51 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
 
             OutlinedTextField(value = text, onValueChange = { text = it }, label = { Text("Text") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
 
+            apply {
+                val dropdownOptions = ReminderTrigger.entries.toList().map { unit -> DropdownOption(unit.id, unit.label) }
+                val dropdownInitialSelection by remember(selectedTrigger) {
+                    mutableStateOf(dropdownOptions.find { option -> option.id == selectedTrigger.id }!!)
+                }
+                Dropdown(label = "Trigger", options = dropdownOptions, selected = dropdownInitialSelection) { selectedOption ->
+                    val previousTrigger = selectedTrigger
+                    selectedTrigger = ReminderTrigger.entries.find { entry -> entry.id == selectedOption.id }!!
+
+                    if (selectedTrigger != previousTrigger) {
+                        duration = when (selectedTrigger) {
+                            ReminderTrigger.ELAPSED_TIME -> 30.toString()
+                            ReminderTrigger.DISTANCE -> 10.toString()
+                            ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED -> 160.toString()
+                            ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED -> 200.toString()
+                            ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> 60.toString()
+                            ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED -> 100.toString()
+                            ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> 40.toString()
+                            ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> 20.toString()
+                            ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> 120.toString()
+                            ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> 60.toString()
+                        }
+                    }
+                }
+            }
+
             OutlinedTextField(value = duration, modifier = Modifier.fillMaxWidth(),
                 onValueChange = { duration = it },
-                label = { Text("Interval") },
-                suffix = { Text("min") },
+                label = {
+                    when(selectedTrigger){
+                        ReminderTrigger.ELAPSED_TIME ->  Text("Interval")
+                        ReminderTrigger.DISTANCE -> Text("Distance")
+                        ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum heart rate")
+                        ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum power")
+                        ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum heart rate")
+                        ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum power")
+                        ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum speed")
+                        ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum speed")
+                        ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum cadence")
+                        ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum cadence")
+                    }
+                },
+                suffix = {
+                    Text(selectedTrigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL))
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true
             )
@@ -120,6 +174,13 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                         ContextCompat.getColor(LocalContext.current, R.color.bGreen),
                         ContextCompat.getColor(LocalContext.current, R.color.bBlue),
                         ContextCompat.getColor(LocalContext.current, R.color.bCyan),
+
+                        ContextCompat.getColor(LocalContext.current, R.color.hRed),
+                        ContextCompat.getColor(LocalContext.current, R.color.hPurple),
+                        ContextCompat.getColor(LocalContext.current, R.color.hYellow),
+                        ContextCompat.getColor(LocalContext.current, R.color.hGreen),
+                        ContextCompat.getColor(LocalContext.current, R.color.hBlue),
+                        ContextCompat.getColor(LocalContext.current, R.color.hCyan),
                     ),
                 )
             )
