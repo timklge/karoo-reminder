@@ -13,10 +13,10 @@
     <color name="bYellow">#707000</color>
     <color name="bCyan">#007070</color>
 
-    <color name="hRed">#FF3030</color>
-    <color name="hGreen">#20FF20</color>
-    <color name="hBlue">#3030FF</color>
-    <color name="hPurple">#FF20FF</color>
-    <color name="hYellow">#FFFF20</color>
-    <color name="hCyan">#20FFFF</color>
+    <color name="hRed">#FF6060</color>
+    <color name="hGreen">#50FF50</color>
+    <color name="hBlue">#7070FF</color>
+    <color name="hPurple">#FF70FF</color>
+    <color name="hYellow">#FFFF60</color>
+    <color name="hCyan">#60FFFF</color>
 </resources>
