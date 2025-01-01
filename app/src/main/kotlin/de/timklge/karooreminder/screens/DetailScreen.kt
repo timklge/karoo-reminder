@@ -50,6 +50,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.maxkeppeker.sheets.core.models.base.UseCaseState
 import com.maxkeppeler.sheets.color.ColorDialog
 import com.maxkeppeler.sheets.color.models.ColorConfig
@@ -61,8 +62,10 @@ import de.timklge.karooreminder.Dropdown
 import de.timklge.karooreminder.DropdownOption
 import de.timklge.karooreminder.R
 import de.timklge.karooreminder.ReminderTrigger
+import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.PlayBeepPattern
+import io.hammerhead.karooext.models.UserProfile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +87,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var selectedTone by remember { mutableStateOf(reminder.tone) }
     var autoDismissSeconds by remember { mutableStateOf(reminder.autoDismissSeconds.toString()) }
     var selectedTrigger by remember { mutableStateOf(reminder.trigger) }
+
+    val profile by karooSystem.streamUserProfile().collectAsStateWithLifecycle(null)
 
     fun getUpdatedReminder(): Reminder = Reminder(reminder.id, title, duration.toIntOrNull() ?: 1,
         text = text,
@@ -121,6 +126,10 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED -> 200.toString()
                             ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> 60.toString()
                             ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED -> 100.toString()
+                            ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> 40.toString()
+                            ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> 20.toString()
+                            ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> 120.toString()
+                            ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> 60.toString()
                         }
                     }
                 }
@@ -136,17 +145,14 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                         ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum power")
                         ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum heart rate")
                         ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum power")
+                        ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum speed")
+                        ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum speed")
+                        ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum cadence")
+                        ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum cadence")
                     }
                 },
                 suffix = {
-                    when(selectedTrigger){
-                        ReminderTrigger.ELAPSED_TIME -> Text("min")
-                        ReminderTrigger.DISTANCE -> Text("km")
-                        ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED -> Text("bpm")
-                        ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED -> Text("W")
-                        ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> Text("bpm")
-                        ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED -> Text("W")
-                    }
+                    Text(selectedTrigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL))
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true
