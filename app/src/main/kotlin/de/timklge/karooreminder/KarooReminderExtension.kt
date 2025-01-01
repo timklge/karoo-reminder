@@ -259,6 +259,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1") {
                 .filter { it > 0.0 }
                 .combine(preferences) { value, reminders -> StreamData(value, reminders) }
                 .combine(karooSystem.streamUserProfile()) { streamData, profile -> streamData.copy(imperial = profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL) }
+                .onlyIfNValuesReceivedWithinTimeframe(5, 1000 * 10) // At least 5 values have been received over the last 10 seconds
                 .map { (value, reminders, imperial) ->
                     val triggered = reminders?.filter { reminder ->
                         val isSpeedTrigger = triggerType == ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED || triggerType == ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED

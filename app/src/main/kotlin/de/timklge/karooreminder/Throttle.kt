@@ -14,3 +14,18 @@ fun<T> Flow<T>.throttle(timeout: Long): Flow<T> = flow {
         }
     }
 }
+
+fun<T> Flow<T>.onlyIfNValuesReceivedWithinTimeframe(n: Int, timeframe: Long): Flow<T> = flow {
+    val lastValuesReceivedAt = mutableListOf<Long>()
+
+    collect { value ->
+        val currentTime = System.currentTimeMillis()
+
+        lastValuesReceivedAt.removeAll { it + timeframe < currentTime }
+        lastValuesReceivedAt.add(currentTime)
+
+        if (lastValuesReceivedAt.size >= n) {
+            emit(value)
+        }
+    }
+}
