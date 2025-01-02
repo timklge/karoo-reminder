@@ -65,7 +65,7 @@ enum class ReminderTrigger(val id: String, val label: String) {
     }
 }
 
-class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1") {
+class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.1") {
 
     companion object {
         const val TAG = "karoo-reminder"
@@ -171,7 +171,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1") {
                             detail = reminder.text,
                             title = reminder.name,
                             autoDismissMs = if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
-                            icon = R.drawable.ic_launcher,
+                            icon = R.drawable.timer,
                             textColor = reminder.getTextColor(applicationContext),
                             backgroundColor = reminder.getResourceColor(applicationContext)
                         )))
@@ -221,7 +221,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1") {
                             detail = reminder.text,
                             title = reminder.name,
                             autoDismissMs = if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
-                            icon = R.drawable.ic_launcher,
+                            icon = R.drawable.timer,
                             textColor = reminder.getTextColor(applicationContext),
                             backgroundColor = reminder.getResourceColor(applicationContext)
                         )))
@@ -299,7 +299,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1") {
                                     detail = reminder.text,
                                     title = reminder.name,
                                     autoDismissMs = if (reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
-                                    icon = R.drawable.ic_launcher,
+                                    icon = R.drawable.timer,
                                     textColor = reminder.getTextColor(applicationContext),
                                     backgroundColor = reminder.getResourceColor(applicationContext)
                                 )
