@@ -75,7 +75,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.1") {
 
     private var jobs: MutableSet<Job> = mutableSetOf()
 
-    data class DisplayedReminder(val tones: ReminderBeepPattern, val trigger: ReminderTrigger, val alert: InRideAlert)
+    data class DisplayedReminder(val beepPattern: ReminderBeepPattern, val trigger: ReminderTrigger, val alert: InRideAlert)
 
     private var reminderChannel = Channel<DisplayedReminder>(2, BufferOverflow.DROP_OLDEST)
 
@@ -99,8 +99,8 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.1") {
                 delay(1_000)
                 applicationContext.sendBroadcast(intent)
 
-                if (displayedReminder.tones != ReminderBeepPattern.NO_TONES) {
-                    karooSystem.dispatch(PlayBeepPattern(displayedReminder.tones.tones))
+                if (displayedReminder.beepPattern != ReminderBeepPattern.NO_TONES) {
+                    karooSystem.dispatch(PlayBeepPattern(displayedReminder.beepPattern.tones))
                     mediaPlayer?.start()
                 }
                 karooSystem.dispatch(displayedReminder.alert)

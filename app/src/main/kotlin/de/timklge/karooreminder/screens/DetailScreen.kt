@@ -295,15 +295,17 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             .fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
                             ReminderBeepPattern.entries.forEach { pattern ->
+                                val tones = pattern.tones
+
                                 Row(modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
                                         dialogSelectedTone = pattern
-                                        karooSystem.dispatch(PlayBeepPattern(pattern.tones))
+                                        karooSystem.dispatch(PlayBeepPattern(tones))
                                     }, verticalAlignment = Alignment.CenterVertically) {
                                     RadioButton(selected = dialogSelectedTone == pattern, onClick = {
                                         dialogSelectedTone = pattern
-                                        karooSystem.dispatch(PlayBeepPattern(pattern.tones))
+                                        karooSystem.dispatch(PlayBeepPattern(tones))
                                     })
                                     Text(
                                         text = pattern.displayName,
