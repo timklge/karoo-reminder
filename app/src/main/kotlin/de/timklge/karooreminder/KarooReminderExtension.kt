@@ -65,7 +65,7 @@ enum class ReminderTrigger(val id: String, val label: String) {
     }
 }
 
-class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.1") {
+class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.2") {
 
     companion object {
         const val TAG = "karoo-reminder"

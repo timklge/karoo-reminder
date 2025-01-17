@@ -42,12 +42,12 @@ enum class ReminderColor(@ColorRes val colorRes: Int, val whiteFont: Boolean, va
     DARK_BLUE(R.color.bBlue, true),
     DARK_CYAN(R.color.bCyan, true),
 
-    LIGHT_RED(R.color.hRed, false, setOf(android.graphics.Color.parseColor("#FF5050"))),
-    LIGHT_PURPLE(R.color.hPurple, false, setOf(android.graphics.Color.parseColor("#FF20FF"))),
-    LIGHT_YELLOW(R.color.hYellow, false, setOf(android.graphics.Color.parseColor("#FFFF20"))),
-    LIGHT_GREEN(R.color.hGreen, false, setOf(android.graphics.Color.parseColor("#20FF20"))),
+    LIGHT_RED(R.color.hRed, false, setOf(android.graphics.Color.parseColor("#FF6060"))),
+    LIGHT_PURPLE(R.color.hPurple, false, setOf(android.graphics.Color.parseColor("#FF70FF"))),
+    LIGHT_YELLOW(R.color.hYellow, false, setOf(android.graphics.Color.parseColor("#FFFF60"))),
+    LIGHT_GREEN(R.color.hGreen, false, setOf(android.graphics.Color.parseColor("#50FF50"))),
     LIGHT_BLUE(R.color.hBlue, false, setOf(android.graphics.Color.parseColor("#7070FF"))),
-    LIGHT_CYAN(R.color.hCyan, false, setOf(android.graphics.Color.parseColor("#20FFFF")));
+    LIGHT_CYAN(R.color.hCyan, false, setOf(android.graphics.Color.parseColor("#60FFFF")));
 
     @ColorRes
     fun getTextColor(): Int {
