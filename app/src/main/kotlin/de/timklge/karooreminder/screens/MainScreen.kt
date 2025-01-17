@@ -44,7 +44,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.toColor
+import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,6 +55,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import de.timklge.karooreminder.KarooReminderExtension
+import de.timklge.karooreminder.R
 import de.timklge.karooreminder.dataStore
 import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
@@ -193,7 +194,7 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
                             Modifier
                                 .height(60.dp)
                                 .padding(5.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Surface(shape = CircleShape, color = Color(reminder.foregroundColor.toColor().toArgb()),
+                            Surface(shape = CircleShape, color = Color(ContextCompat.getColor(ctx, reminder.displayForegroundColor?.colorRes ?: R.color.hRed)),
                                 modifier = Modifier
                                     .height(60.dp)
                                     .shadow(5.dp, CircleShape)
