@@ -172,8 +172,8 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.1") {
                             title = reminder.name,
                             autoDismissMs = if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
                             icon = R.drawable.timer,
-                            textColor = reminder.getTextColor(applicationContext),
-                            backgroundColor = reminder.getResourceColor(applicationContext)
+                            textColor = reminder.displayForegroundColor?.getTextColor() ?: R.color.black,
+                            backgroundColor = reminder.displayForegroundColor?.colorRes ?: R.color.hRed
                         )))
                     }
                 }
@@ -222,8 +222,8 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.1") {
                             title = reminder.name,
                             autoDismissMs = if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
                             icon = R.drawable.timer,
-                            textColor = reminder.getTextColor(applicationContext),
-                            backgroundColor = reminder.getResourceColor(applicationContext)
+                            textColor = reminder.displayForegroundColor?.getTextColor() ?: R.color.black,
+                            backgroundColor = reminder.displayForegroundColor?.colorRes ?: R.color.hRed
                         )))
                     }
                 }
@@ -300,8 +300,8 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.1") {
                                     title = reminder.name,
                                     autoDismissMs = if (reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
                                     icon = R.drawable.timer,
-                                    textColor = reminder.getTextColor(applicationContext),
-                                    backgroundColor = reminder.getResourceColor(applicationContext)
+                                    textColor = reminder.displayForegroundColor?.getTextColor() ?: R.color.black,
+                                    backgroundColor = reminder.displayForegroundColor?.colorRes ?: R.color.hRed
                                 )
                             )
                         )

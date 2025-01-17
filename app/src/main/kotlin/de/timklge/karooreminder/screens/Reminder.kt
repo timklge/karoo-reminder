@@ -1,6 +1,7 @@
 package de.timklge.karooreminder.screens
 
 import android.content.Context
+import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import de.timklge.karooreminder.R
 import de.timklge.karooreminder.ReminderTrigger
@@ -25,45 +26,53 @@ enum class ReminderBeepPattern(val displayName: String, val tones: List<PlayBeep
     )
 }
 
+/**
+ * Colors for reminders
+ *
+ * @param colorRes The color resource for the color
+ * @param whiteFont Whether the font should be white or black
+ * @param mapFromColors The colors that should be mapped to this color (only used for migration of old colors that were stored as integers)
+ */
+@Serializable
+enum class ReminderColor(@ColorRes val colorRes: Int, val whiteFont: Boolean, val mapFromColors: Set<Int> = emptySet()) {
+    DARK_RED(R.color.bRed, true),
+    DARK_PURPLE(R.color.bPurple, true),
+    DARK_YELLOW(R.color.bYellow, true),
+    DARK_GREEN(R.color.bGreen, true),
+    DARK_BLUE(R.color.bBlue, true),
+    DARK_CYAN(R.color.bCyan, true),
+
+    LIGHT_RED(R.color.hRed, false, setOf(android.graphics.Color.parseColor("#FF5050"))),
+    LIGHT_PURPLE(R.color.hPurple, false, setOf(android.graphics.Color.parseColor("#FF20FF"))),
+    LIGHT_YELLOW(R.color.hYellow, false, setOf(android.graphics.Color.parseColor("#FFFF20"))),
+    LIGHT_GREEN(R.color.hGreen, false, setOf(android.graphics.Color.parseColor("#20FF20"))),
+    LIGHT_BLUE(R.color.hBlue, false, setOf(android.graphics.Color.parseColor("#7070FF"))),
+    LIGHT_CYAN(R.color.hCyan, false, setOf(android.graphics.Color.parseColor("#20FFFF")));
+
+    @ColorRes
+    fun getTextColor(): Int {
+        return if(whiteFont) R.color.white else R.color.black
+    }
+
+    companion object {
+        fun getColor(context: Context, color: Int): ReminderColor {
+            return entries.find { reminderColor ->
+                val mapFromColors = reminderColor.mapFromColors + ContextCompat.getColor(context, reminderColor.colorRes)
+
+                mapFromColors.any { it == color }
+            } ?: error("Unknown color resource")
+        }
+    }
+}
+
 @Serializable
 class Reminder(val id: Int, var name: String, var interval: Int, var text: String,
+               var displayForegroundColor: ReminderColor? = null,
+               @Deprecated("Use displayForegroundColor instead")
                var foregroundColor: Int = android.graphics.Color.parseColor("#FF6060"),
                val isActive: Boolean = true, val isAutoDismiss: Boolean = true,
                val tone: ReminderBeepPattern = ReminderBeepPattern.THREE_TONES_UP,
                var trigger: ReminderTrigger = ReminderTrigger.ELAPSED_TIME,
-               val autoDismissSeconds: Int = 15){
-
-    fun getTextColor(context: Context): Int {
-        return when(foregroundColor){
-            ContextCompat.getColor(context, R.color.bRed),
-            ContextCompat.getColor(context, R.color.bPurple),
-            ContextCompat.getColor(context, R.color.bYellow),
-            ContextCompat.getColor(context, R.color.bGreen),
-            ContextCompat.getColor(context, R.color.bBlue),
-            ContextCompat.getColor(context, R.color.bCyan) -> R.color.white
-            else -> R.color.black
-        }
-    }
-
-    fun getResourceColor(context: Context): Int {
-        return when(foregroundColor){
-            ContextCompat.getColor(context, R.color.bRed) -> R.color.bRed
-            ContextCompat.getColor(context, R.color.bPurple) -> R.color.bPurple
-            ContextCompat.getColor(context, R.color.bYellow) -> R.color.bYellow
-            ContextCompat.getColor(context, R.color.bGreen) -> R.color.bGreen
-            ContextCompat.getColor(context, R.color.bBlue) -> R.color.bBlue
-            ContextCompat.getColor(context, R.color.bCyan) -> R.color.bCyan
-
-            ContextCompat.getColor(context, R.color.hRed) -> R.color.hRed
-            ContextCompat.getColor(context, R.color.hPurple) -> R.color.hPurple
-            ContextCompat.getColor(context, R.color.hYellow) -> R.color.hYellow
-            ContextCompat.getColor(context, R.color.hGreen) -> R.color.hGreen
-            ContextCompat.getColor(context, R.color.hBlue) -> R.color.hBlue
-            ContextCompat.getColor(context, R.color.hCyan) -> R.color.hCyan
-
-            else -> error("Unknown color")
-        }
-    }
-}
+               val autoDismissSeconds: Int = 15)
 
 val defaultReminders = Json.encodeToString(listOf(Reminder(0, "Drink", 30, "Take a sip!")))

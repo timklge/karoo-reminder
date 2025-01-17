@@ -37,7 +37,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -77,7 +76,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     }
     var title by remember { mutableStateOf(reminder.name) }
     var text by remember { mutableStateOf(reminder.text) }
-    var selectedColor by remember { mutableIntStateOf(reminder.foregroundColor) }
+    var selectedColor by remember { mutableStateOf(reminder.displayForegroundColor) }
     val colorDialogState by remember { mutableStateOf(UseCaseState()) }
     var duration by remember { mutableStateOf(reminder.interval.toString()) }
     var isActive by remember { mutableStateOf(reminder.isActive) }
@@ -92,7 +91,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
 
     fun getUpdatedReminder(): Reminder = Reminder(reminder.id, title, duration.toIntOrNull() ?: 1,
         text = text,
-        foregroundColor = selectedColor,
+        displayForegroundColor = selectedColor,
         isActive = isActive,
         trigger = selectedTrigger,
         isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15)
@@ -161,8 +160,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             ColorDialog(
                 state = colorDialogState,
                 selection = ColorSelection(
-                    selectedColor = SingleColor(selectedColor),
-                    onSelectColor = { c -> selectedColor = c },
+                    selectedColor = SingleColor(colorRes = selectedColor?.colorRes),
+                    onSelectColor = { c -> selectedColor = ReminderColor.getColor(ctx, c) },
                 ),
                 config = ColorConfig(
                     displayMode = ColorSelectionMode.TEMPLATE,
@@ -190,7 +189,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 onClick = {
                     colorDialogState.show()
             }) {
-                Surface(shape = CircleShape, color = Color(selectedColor),
+                Surface(shape = CircleShape, color = Color(ContextCompat.getColor(ctx, selectedColor?.colorRes ?: R.color.hRed)),
                     modifier = Modifier
                         .height(40.dp)
                         .shadow(5.dp, CircleShape)

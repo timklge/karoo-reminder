@@ -89,6 +89,11 @@ fun ReminderAppNavHost(modifier: Modifier = Modifier, navController: NavHostCont
                 val entries = Json.decodeFromString<MutableList<Reminder>>(
                     t[preferencesKey] ?: defaultReminders
                 )
+                entries.forEach {
+                    if (it.displayForegroundColor == null){
+                        it.displayForegroundColor = ReminderColor.getColor(ctx, it.foregroundColor)
+                    }
+                }
                 reminders.addAll(entries)
             } catch(e: Throwable){
                 Log.e(KarooReminderExtension.TAG,"Failed to read preferences", e)
@@ -106,8 +111,6 @@ fun ReminderAppNavHost(modifier: Modifier = Modifier, navController: NavHostCont
             val reminderId = stack.arguments?.getInt("id")
             val reminder = reminders.find { it.id  == reminderId}
             val reminderIndex = reminders.indexOf(reminder)
-
-            val ctx = LocalContext.current
 
             reminder?.let { r ->
                 DetailScreen(false, r, { updatedReminder ->
@@ -127,8 +130,6 @@ fun ReminderAppNavHost(modifier: Modifier = Modifier, navController: NavHostCont
         composable(route = "create") {
             val nextReminderId = reminders.maxOfOrNull { it.id + 1 } ?: 0
             val newReminder = Reminder(nextReminderId, "", 30, "")
-
-            val ctx = LocalContext.current
 
             DetailScreen(true, newReminder, { updatedReminder ->
                 updatedReminder?.let { r ->
