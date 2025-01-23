@@ -129,6 +129,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> 20.toString()
                             ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> 120.toString()
                             ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> 60.toString()
+                            ReminderTrigger.ENERGY_OUTPUT -> 200.toString()
                         }
                     }
                 }
@@ -148,6 +149,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                         ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum speed")
                         ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum cadence")
                         ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum cadence")
+                        ReminderTrigger.ENERGY_OUTPUT -> Text("Energy Output")
                     }
                 },
                 suffix = {

@@ -4,7 +4,7 @@
 [![GitHub Downloads (specific asset, all releases)](https://img.shields.io/github/downloads/timklge/karoo-reminder/app-release.apk)](https://github.com/timklge/karoo-reminder/releases)
 ![GitHub License](https://img.shields.io/github/license/timklge/karoo-reminder)
 
-Karoo extension that displays in-ride alerts based on custom triggers. Reminders can be set to activate after a specific time interval, distance traveled, or when a sensor value is outside a defined range (e.g., heart rate exceeds zone 2).
+Karoo extension that displays in-ride alerts based on custom triggers. Reminders can be set to activate after a specific time interval, distance traveled, energy output or when a sensor value is outside a defined range (e.g., heart rate exceeds zone 2).
 
 ![Reminder List](list.png)
 ![Reminder Detail](detail.png)

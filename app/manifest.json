@@ -3,9 +3,9 @@
   "packageName": "de.timklge.karooreminder",
   "iconUrl": "https://github.com/timklge/karoo-reminder/releases/latest/download/karoo-reminder.png",
   "latestApkUrl": "https://github.com/timklge/karoo-reminder/releases/latest/download/app-release.apk",
-  "latestVersion": "1.1.2",
-  "latestVersionCode": 11,
+  "latestVersion": "1.1.3",
+  "latestVersionCode": 12,
   "developer": "timklge",
   "description": "Shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
-  "releaseNotes": "Increased beep frequency to make sounds louder on K2, make colors brighter"
+  "releaseNotes": "Add energy output trigger"
 }
