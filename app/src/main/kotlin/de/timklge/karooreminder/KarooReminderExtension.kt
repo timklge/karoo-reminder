@@ -22,12 +22,14 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -65,6 +67,24 @@ enum class ReminderTrigger(val id: String, val label: String) {
             CADENCE_LIMIT_MAXIMUM_EXCEEDED, CADENCE_LIMIT_MINIMUM_EXCEEDED -> "rpm"
             ENERGY_OUTPUT -> "kJ"
         }
+    }
+}
+
+fun Flow<Int>.allIntermediateInts(): Flow<Int> = flow {
+    var lastValue: Int? = null
+
+    collect { value ->
+        if (lastValue != null){
+            val start = (lastValue!! + 1).coerceAtMost(value)
+
+            for (i in start..value) {
+                emit(i)
+            }
+        } else {
+            emit(value)
+        }
+
+        lastValue = value
     }
 }
 
@@ -247,9 +267,10 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.3") {
 
             karooSystem.streamDataFlow(DataType.Type.ENERGY_OUTPUT)
                 .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
-                .map { (it / 1000).toInt() }
+                .map { it.toInt() }
                 .distinctUntilChanged()
                 .filterNot { it == 0 }
+                .allIntermediateInts()
                 .combine(preferences) { energyOutput, reminders -> energyOutput to reminders}
                 .distinctUntilChanged { old, new -> old.first == new.first }
                 .collectLatest { (energyOutput, reminders) ->
