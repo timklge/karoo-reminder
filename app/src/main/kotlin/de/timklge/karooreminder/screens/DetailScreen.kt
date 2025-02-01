@@ -57,14 +57,11 @@ import com.maxkeppeler.sheets.color.models.ColorSelection
 import com.maxkeppeler.sheets.color.models.ColorSelectionMode
 import com.maxkeppeler.sheets.color.models.MultipleColors
 import com.maxkeppeler.sheets.color.models.SingleColor
-import de.timklge.karooreminder.Dropdown
-import de.timklge.karooreminder.DropdownOption
 import de.timklge.karooreminder.R
 import de.timklge.karooreminder.ReminderTrigger
 import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.PlayBeepPattern
-import io.hammerhead.karooext.models.UserProfile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,6 +80,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var autoDismiss by remember { mutableStateOf(reminder.isAutoDismiss) }
     var deleteDialogVisible by remember { mutableStateOf(false) }
     var toneDialogVisible by remember { mutableStateOf(false) }
+    var triggerDialogVisible by remember { mutableStateOf(false) }
     var selectedTone by remember { mutableStateOf(reminder.tone) }
     var autoDismissSeconds by remember { mutableStateOf(reminder.autoDismissSeconds.toString()) }
     var selectedTrigger by remember { mutableStateOf(reminder.trigger) }
@@ -108,56 +106,16 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
 
             OutlinedTextField(value = text, onValueChange = { text = it }, label = { Text("Text") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
 
-            apply {
-                val dropdownOptions = ReminderTrigger.entries.toList().map { unit -> DropdownOption(unit.id, unit.label) }
-                val dropdownInitialSelection by remember(selectedTrigger) {
-                    mutableStateOf(dropdownOptions.find { option -> option.id == selectedTrigger.id }!!)
-                }
-                Dropdown(label = "Trigger", options = dropdownOptions, selected = dropdownInitialSelection) { selectedOption ->
-                    val previousTrigger = selectedTrigger
-                    selectedTrigger = ReminderTrigger.entries.find { entry -> entry.id == selectedOption.id }!!
-
-                    if (selectedTrigger != previousTrigger) {
-                        duration = when (selectedTrigger) {
-                            ReminderTrigger.ELAPSED_TIME -> 30.toString()
-                            ReminderTrigger.DISTANCE -> 10.toString()
-                            ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED -> 160.toString()
-                            ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED -> 200.toString()
-                            ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> 60.toString()
-                            ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED -> 100.toString()
-                            ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> 40.toString()
-                            ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> 20.toString()
-                            ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> 120.toString()
-                            ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> 60.toString()
-                            ReminderTrigger.ENERGY_OUTPUT -> 200.toString()
-                        }
-                    }
-                }
+            FilledTonalButton(modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+                onClick = {
+                    triggerDialogVisible = true
+                }) {
+                Icon(Icons.Default.Build, contentDescription = "Change Trigger")
+                Spacer(modifier = Modifier.width(5.dp))
+                Text("Trigger: ${selectedTrigger.label}")
             }
-
-            OutlinedTextField(value = duration, modifier = Modifier.fillMaxWidth(),
-                onValueChange = { duration = it },
-                label = {
-                    when(selectedTrigger){
-                        ReminderTrigger.ELAPSED_TIME ->  Text("Interval")
-                        ReminderTrigger.DISTANCE -> Text("Distance")
-                        ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum heart rate")
-                        ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum power")
-                        ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum heart rate")
-                        ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum power")
-                        ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum speed")
-                        ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum speed")
-                        ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum cadence")
-                        ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum cadence")
-                        ReminderTrigger.ENERGY_OUTPUT -> Text("Energy Output")
-                    }
-                },
-                suffix = {
-                    Text(selectedTrigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL))
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true
-            )
 
             ColorDialog(
                 state = colorDialogState,
@@ -199,7 +157,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
 
                 Spacer(modifier = Modifier.width(5.dp))
 
-                Text("Change Color")
+                Text("Color")
             }
 
             FilledTonalButton(modifier = Modifier
@@ -208,9 +166,9 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 onClick = {
                     toneDialogVisible = true
                 }) {
-                Icon(Icons.Default.Build, contentDescription = "Change Tone")
+                Icon(Icons.Default.Build, contentDescription = "Tone")
                 Spacer(modifier = Modifier.width(5.dp))
-                Text("Change Tone")
+                Text("Tone: ${selectedTone.displayName}")
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -280,6 +238,50 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 title = { Text("Delete reminder") }, text = { Text("Really delete this reminder?") })
             }
 
+            if (triggerDialogVisible){
+                Dialog(onDismissRequest = { triggerDialogVisible = false }) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        shape = RoundedCornerShape(10.dp),
+                    ) {
+                        Column(modifier = Modifier
+                            .padding(5.dp)
+                            .verticalScroll(rememberScrollState())
+                            .fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                            ReminderTrigger.entries.forEach { trigger ->
+                                Row(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedTrigger = trigger
+                                        triggerDialogVisible = false
+                                    }, verticalAlignment = Alignment.CenterVertically) {
+                                    RadioButton(selected = selectedTrigger == trigger, onClick = {
+                                        selectedTrigger = trigger
+                                        triggerDialogVisible = false
+                                    })
+
+                                    Column(modifier = Modifier.padding(start = 10.dp)) {
+                                        Text(
+                                            text = trigger.label,
+                                        )
+
+                                        if (trigger == ReminderTrigger.ENERGY_OUTPUT){
+                                            Text(
+                                                text = "Powermeter required",
+                                                color = Color.Gray,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             if (toneDialogVisible){
                 Dialog(onDismissRequest = { toneDialogVisible = false }) {
                     var dialogSelectedTone by remember { mutableStateOf(selectedTone) }
@@ -287,8 +289,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        shape = RoundedCornerShape(16.dp),
+                            .padding(10.dp),
+                        shape = RoundedCornerShape(10.dp),
                     ) {
                         Column(modifier = Modifier
                             .padding(5.dp)
