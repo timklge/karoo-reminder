@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -45,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -62,6 +64,7 @@ import de.timklge.karooreminder.ReminderTrigger
 import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.PlayBeepPattern
+import io.hammerhead.karooext.models.UserProfile
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,10 +115,34 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 onClick = {
                     triggerDialogVisible = true
                 }) {
-                Icon(Icons.Default.Build, contentDescription = "Change Trigger")
+                Icon(Icons.Default.Build, contentDescription = "Change Trigger", modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(5.dp))
                 Text("Trigger: ${selectedTrigger.label}")
             }
+
+            OutlinedTextField(value = duration, modifier = Modifier.fillMaxWidth(),
+                onValueChange = { duration = it },
+                label = {
+                    when(selectedTrigger){
+                        ReminderTrigger.ELAPSED_TIME ->  Text("Interval")
+                        ReminderTrigger.DISTANCE -> Text("Distance")
+                        ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum heart rate")
+                        ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum power")
+                        ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum heart rate")
+                        ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum power")
+                        ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum speed")
+                        ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum speed")
+                        ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum cadence")
+                        ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum cadence")
+                        ReminderTrigger.ENERGY_OUTPUT -> Text("Energy Output")
+                    }
+                },
+                suffix = {
+                    Text(selectedTrigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL))
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
+            )
 
             ColorDialog(
                 state = colorDialogState,
@@ -145,15 +172,16 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             )
 
             FilledTonalButton(modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .height(60.dp),
                 onClick = {
                     colorDialogState.show()
             }) {
                 Surface(shape = CircleShape, color = Color(ContextCompat.getColor(ctx, selectedColor?.colorRes ?: R.color.hRed)),
                     modifier = Modifier
-                        .height(40.dp)
+                        .height(30.dp)
                         .shadow(5.dp, CircleShape)
-                        .width(40.dp), content = {})
+                        .width(30.dp), content = {})
 
                 Spacer(modifier = Modifier.width(5.dp))
 
@@ -166,7 +194,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 onClick = {
                     toneDialogVisible = true
                 }) {
-                Icon(Icons.Default.Build, contentDescription = "Tone")
+                Icon(painterResource(R.drawable.volume), contentDescription = "Tone", modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(5.dp))
                 Text("Tone: ${selectedTone.displayName}")
             }
