@@ -130,6 +130,12 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> 120.toString()
                             ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> 60.toString()
                             ReminderTrigger.ENERGY_OUTPUT -> 200.toString()
+                            ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED -> 37.toString()
+                            ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> 35.toString()
+                            ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED -> 6_000.toString()
+                            ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> 5_000.toString()
+                            ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED -> 6_000.toString()
+                            ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> 5_000.toString()
                         }
                     }
                 }
@@ -150,6 +156,12 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                         ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum cadence")
                         ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum cadence")
                         ReminderTrigger.ENERGY_OUTPUT -> Text("Energy Output")
+                        ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum core temp")
+                        ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum core temp")
+                        ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED -> Text("Max front tire pressure")
+                        ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> Text("Min front tire pressure")
+                        ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED -> Text("Max rear tire pressure")
+                        ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> Text("Min rear tire pressure")
                     }
                 },
                 suffix = {
