@@ -15,8 +15,8 @@ android {
         applicationId = "de.timklge.karooreminder"
         minSdk = 26
         targetSdk = 34
-        versionCode = 12
-        versionName = "1.1.3"
+        versionCode = 13
+        versionName = "1.1.4"
     }
 
     signingConfigs {
@@ -38,7 +38,7 @@ android {
         }
         release {
             signingConfig = signingConfigs.getByName("release")
-            // isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
