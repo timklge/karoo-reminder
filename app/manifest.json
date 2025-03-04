@@ -3,9 +3,9 @@
   "packageName": "de.timklge.karooreminder",
   "iconUrl": "https://github.com/timklge/karoo-reminder/releases/latest/download/karoo-reminder.png",
   "latestApkUrl": "https://github.com/timklge/karoo-reminder/releases/latest/download/app-release.apk",
-  "latestVersion": "1.1.4",
-  "latestVersionCode": 13,
+  "latestVersion": "1.1.5",
+  "latestVersionCode": 14,
   "developer": "timklge",
   "description": "Shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
-  "releaseNotes": "Enlarge trigger select, increase tone frequency, optimize build"
+  "releaseNotes": "* Enlarge trigger select\n* Increase tone frequency\n* Optimize build\n* Add touchable back button"
 }

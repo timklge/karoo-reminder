@@ -18,7 +18,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                ReminderAppNavHost()
+                ReminderAppNavHost() {
+                    finish()
+                }
             }
         }
     }
