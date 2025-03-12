@@ -88,8 +88,7 @@ fun Flow<Int>.allIntermediateInts(): Flow<Int> = flow {
     }
 }
 
-class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.5") {
-
+class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERSION_NAME) {
     companion object {
         const val TAG = "karoo-reminder"
     }

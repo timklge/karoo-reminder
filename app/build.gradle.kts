@@ -15,8 +15,8 @@ android {
         applicationId = "de.timklge.karooreminder"
         minSdk = 26
         targetSdk = 34
-        versionCode = 14
-        versionName = "1.1.5"
+        versionCode = 100 + (System.getenv("BUILD_NUMBER")?.toInt() ?: 1)
+        versionName = System.getenv("RELEASE_VERSION") ?: "1.0"
     }
 
     signingConfigs {
@@ -51,7 +51,40 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+}
+
+
+tasks.register("generateManifest") {
+    description = "Generates manifest.json with current version information"
+    group = "build"
+
+    doLast {
+        val manifestFile = file("$projectDir/manifest.json")
+        val manifest = mapOf(
+            "label" to "karoo-reminder",
+            "packageName" to "de.timklge.karooreminder",
+            "iconUrl" to "https://github.com/timklge/karoo-reminder/releases/latest/download/karoo-reminder.png",
+            "latestApkUrl" to "https://github.com/timklge/karoo-reminder/releases/latest/download/app-release.apk",
+            "latestVersion" to android.defaultConfig.versionName,
+            "latestVersionCode" to android.defaultConfig.versionCode,
+            "developer" to "timklge",
+            "description" to "Shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
+            "releaseNotes" to "*  Enlarge trigger select\n" +
+                "* Increase tone frequency\n" +
+                "* Optimize build\n" +
+                "* Add touchable back button",
+        )
+
+        val gson = groovy.json.JsonBuilder(manifest).toPrettyString()
+        manifestFile.writeText(gson)
+        println("Generated manifest.json with version ${android.defaultConfig.versionName} (${android.defaultConfig.versionCode})")
+    }
+}
+
+tasks.named("assemble") {
+    dependsOn("generateManifest")
 }
 
 dependencies {
