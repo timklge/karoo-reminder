@@ -71,9 +71,7 @@ tasks.register("generateManifest") {
             "latestVersionCode" to android.defaultConfig.versionCode,
             "developer" to "timklge",
             "description" to "Shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
-            "releaseNotes" to "*  Enlarge trigger select\n" +
-                "* Increase tone frequency\n" +
-                "* Optimize build\n" +
+            "releaseNotes" to "* Add additional beep patterns for Karoo 3\n" +
                 "* Add touchable back button",
         )
 
