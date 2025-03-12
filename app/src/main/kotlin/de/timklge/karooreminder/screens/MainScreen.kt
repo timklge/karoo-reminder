@@ -134,7 +134,7 @@ fun ReminderAppNavHost(modifier: Modifier = Modifier, navController: NavHostCont
         }
         composable(route = "create") {
             val nextReminderId = reminders.maxOfOrNull { it.id + 1 } ?: 0
-            val newReminder = Reminder(nextReminderId, "", 30, "")
+            val newReminder = Reminder(nextReminderId, "", 30, text = "")
 
             DetailScreen(true, newReminder, { updatedReminder ->
                 updatedReminder?.let { r ->
@@ -203,7 +203,8 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
 
                                 Spacer(Modifier.weight(1.0f))
 
-                                Text("${reminder.trigger.getPrefix()}${reminder.interval}${reminder.trigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL)}")
+                                val value = if (reminder.trigger.isDecimalValue()) java.text.DecimalFormat("#.##").format(reminder.intervalFloat) else reminder.interval
+                                Text("${reminder.trigger.getPrefix()}${value}${reminder.trigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL)}")
                             }
                         }
                     }

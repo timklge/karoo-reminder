@@ -78,7 +78,13 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var text by remember { mutableStateOf(reminder.text) }
     var selectedColor by remember { mutableStateOf(reminder.displayForegroundColor) }
     val colorDialogState by remember { mutableStateOf(UseCaseState()) }
-    var duration by remember { mutableStateOf(reminder.interval.toString()) }
+    var duration by remember {
+        mutableStateOf(if (reminder.intervalFloat != null){
+            java.text.DecimalFormat("#.##").format(reminder.intervalFloat)
+        } else {
+            reminder.interval.toString()
+        })
+    }
     var isActive by remember { mutableStateOf(reminder.isActive) }
     var autoDismiss by remember { mutableStateOf(reminder.isAutoDismiss) }
     var deleteDialogVisible by remember { mutableStateOf(false) }
@@ -90,12 +96,17 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
 
     val profile by karooSystem.streamUserProfile().collectAsStateWithLifecycle(null)
 
-    fun getUpdatedReminder(): Reminder = Reminder(reminder.id, title, duration.toIntOrNull() ?: 1,
-        text = text,
-        displayForegroundColor = selectedColor,
-        isActive = isActive,
-        trigger = selectedTrigger,
-        isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15)
+    fun getUpdatedReminder(): Reminder {
+        val durationString = duration.replace(",", ".")
+
+        return Reminder(reminder.id, title, interval = durationString.toDoubleOrNull()?.toInt() ?: 1,
+            intervalFloat = if (selectedTrigger.isDecimalValue()) durationString.toDoubleOrNull() else null,
+            text = text,
+            displayForegroundColor = selectedColor,
+            isActive = isActive,
+            trigger = selectedTrigger,
+            isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15)
+    }
 
     Column(modifier = Modifier
         .fillMaxSize()
@@ -141,12 +152,16 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                         ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> Text("Min front tire pressure")
                         ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED -> Text("Max rear tire pressure")
                         ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> Text("Min rear tire pressure")
+                        ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum temp")
+                        ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum temp")
+                        ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum gradient")
+                        ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum gradient")
                     }
                 },
                 suffix = {
                     Text(selectedTrigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL))
                 },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = KeyboardOptions(keyboardType = if (selectedTrigger.isDecimalValue()) KeyboardType.Decimal else KeyboardType.Number),
                 singleLine = true
             )
 

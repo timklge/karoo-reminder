@@ -75,7 +75,12 @@ enum class ReminderColor(@ColorRes val colorRes: Int, val whiteFont: Boolean, va
 }
 
 @Serializable
-class Reminder(val id: Int, var name: String, var interval: Int, var text: String,
+class Reminder(val id: Int, var name: String,
+               /** Trigger value used by all triggers except temperature, gradient, tire pressure */
+               var interval: Int? = null,
+               /** Trigger value used by temperature, gradient, tire pressure triggers */
+               var intervalFloat: Double? = null,
+               var text: String,
                var displayForegroundColor: ReminderColor? = null,
                @Deprecated("Use displayForegroundColor instead")
                var foregroundColor: Int = android.graphics.Color.parseColor("#FF6060"),
@@ -84,4 +89,4 @@ class Reminder(val id: Int, var name: String, var interval: Int, var text: Strin
                var trigger: ReminderTrigger = ReminderTrigger.ELAPSED_TIME,
                val autoDismissSeconds: Int = 15)
 
-val defaultReminders = Json.encodeToString(listOf(Reminder(0, "Drink", 30, "Take a sip!")))
+val defaultReminders = Json.encodeToString(listOf(Reminder(0, "Drink", 30, text = "Take a sip!")))

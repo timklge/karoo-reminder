@@ -47,6 +47,10 @@ enum class ReminderTrigger(val id: String, val label: String) {
     SPEED_LIMIT_MINIMUM_EXCEEDED("speed_limit_min", "Speed below value"),
     CADENCE_LIMIT_MAXIMUM_EXCEEDED("cadence_limit_max", "Cadence above value"),
     CADENCE_LIMIT_MINIMUM_EXCEEDED("cadence_limit_min", "Cadence below value"),
+    AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED("ambient_temperature_limit_max", "Ambient temperature above value"),
+    AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED("ambient_temperature_limit_min", "Ambient temperature below value"),
+    GRADIENT_LIMIT_MAXIMUM_EXCEEDED("gradient_limit_max", "Gradient above value"),
+    GRADIENT_LIMIT_MINIMUM_EXCEEDED("gradient_limit_min", "Gradient below value"),
     CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED("core_temperature_limit_max", "Core temperature above value"),
     CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED("core_temperature_limit_min", "Core temperature below value"),
     FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED("front_tire_pressure_limit_max", "Front tire pressure above value"),
@@ -56,10 +60,13 @@ enum class ReminderTrigger(val id: String, val label: String) {
 
     fun getPrefix(): String {
         return when (this) {
-            HR_LIMIT_MINIMUM_EXCEEDED, POWER_LIMIT_MINIMUM_EXCEEDED, SPEED_LIMIT_MINIMUM_EXCEEDED, CADENCE_LIMIT_MINIMUM_EXCEEDED, CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> "<"
-            HR_LIMIT_MAXIMUM_EXCEEDED, POWER_LIMIT_MAXIMUM_EXCEEDED, SPEED_LIMIT_MAXIMUM_EXCEEDED, CADENCE_LIMIT_MAXIMUM_EXCEEDED, CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED -> ">"
-            ELAPSED_TIME, DISTANCE -> ""
-            ENERGY_OUTPUT -> ""
+            HR_LIMIT_MINIMUM_EXCEEDED, POWER_LIMIT_MINIMUM_EXCEEDED, SPEED_LIMIT_MINIMUM_EXCEEDED, CADENCE_LIMIT_MINIMUM_EXCEEDED, CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED,
+            AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, GRADIENT_LIMIT_MINIMUM_EXCEEDED -> "<"
+
+            HR_LIMIT_MAXIMUM_EXCEEDED, POWER_LIMIT_MAXIMUM_EXCEEDED, SPEED_LIMIT_MAXIMUM_EXCEEDED, CADENCE_LIMIT_MAXIMUM_EXCEEDED, CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED,
+            AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, GRADIENT_LIMIT_MAXIMUM_EXCEEDED -> ">"
+
+            ELAPSED_TIME, DISTANCE, ENERGY_OUTPUT -> ""
         }
     }
 
@@ -71,11 +78,18 @@ enum class ReminderTrigger(val id: String, val label: String) {
             POWER_LIMIT_MAXIMUM_EXCEEDED, POWER_LIMIT_MINIMUM_EXCEEDED -> "W"
             SPEED_LIMIT_MAXIMUM_EXCEEDED, SPEED_LIMIT_MINIMUM_EXCEEDED -> if(imperial) "mph" else "km/h"
             CADENCE_LIMIT_MAXIMUM_EXCEEDED, CADENCE_LIMIT_MINIMUM_EXCEEDED -> "rpm"
-            CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> "°C"
-            FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> "mbar"
+            CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED -> "°C"
+            FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> "bar"
             ENERGY_OUTPUT -> "kJ"
+            GRADIENT_LIMIT_MAXIMUM_EXCEEDED, GRADIENT_LIMIT_MINIMUM_EXCEEDED -> "%"
         }
     }
+
+    fun isDecimalValue() = this == CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED || this == CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED ||
+            this == FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED || this == FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED ||
+            this == REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED || this == REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED ||
+            this == AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED || this == AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED ||
+            this == GRADIENT_LIMIT_MAXIMUM_EXCEEDED || this == GRADIENT_LIMIT_MINIMUM_EXCEEDED
 }
 
 fun Flow<Int>.allIntermediateInts(): Flow<Int> = flow {
@@ -189,7 +203,17 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.5") {
             startRangeExceededJob(ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED),
             startRangeExceededJob(ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED),
             startRangeExceededJob(ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED)
+            startRangeExceededJob(ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED),
+            startRangeExceededJob(ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED),
+            startRangeExceededJob(ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED),
+            startRangeExceededJob(ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED),
+            startRangeExceededJob(ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED),
+            startRangeExceededJob(ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED),
+            startRangeExceededJob(ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED),
+            startRangeExceededJob(ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED),
+            startRangeExceededJob(ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED),
+            startRangeExceededJob(ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED),
+            startRangeExceededJob(ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED)
         ))
 
         val elapsedTimeJob = startIntervalJob(ReminderTrigger.ELAPSED_TIME) {
@@ -231,7 +255,10 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.5") {
                 .distinctUntilChanged { old, new -> old.first == new.first }
                 .collectLatest { (elapsedMinutes, reminders) ->
                     val rs = reminders
-                        .filter { reminder -> reminder.trigger == trigger && reminder.isActive && elapsedMinutes % reminder.interval == 0 }
+                        .filter { reminder ->
+                            val interval = reminder.interval
+                            reminder.trigger == trigger && reminder.isActive && interval != null && elapsedMinutes % interval == 0
+                        }
 
                     for (reminder in rs){
                         Log.i(TAG, "$trigger reminder: ${reminder.name}")
@@ -272,6 +299,8 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.5") {
                 ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.CORE_TEMP
                 ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TIRE_PRESSURE_FRONT
                 ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TIRE_PRESSURE_REAR
+                ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.ELEVATION_GRADE
+                ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TEMPERATURE
 
                 ReminderTrigger.DISTANCE, ReminderTrigger.ELAPSED_TIME, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $triggerType")
             }
@@ -282,37 +311,60 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.5") {
                 .combine(preferences) { value, reminders -> StreamData(value, reminders) }
                 .combine(karooSystem.streamUserProfile()) { streamData, profile -> streamData.copy(imperial = profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL) }
                 .let {
+                    @Suppress("KotlinConstantConditions")
                     when (triggerType){
-                        // Tire pressure and core temperature triggers do not require ongoing measurements, as measurement rate is unknown
+                        // Tire pressure, gradient and temperature triggers do not require ongoing measurements, as measurement rate is unknown
                         ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED,
                         ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED,
-                        ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED -> it
+                        ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED,
+                        ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED,
+                        ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED -> it
 
-                        else -> it.onlyIfNValuesReceivedWithinTimeframe(5, 1000 * 10) // At least 5 values have been received over the last 10 seconds
+                        ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED,
+                        ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED,
+                        ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED,
+                        ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> it.onlyIfNValuesReceivedWithinTimeframe(5, 1000 * 10) // At least 5 values have been received over the last 10 seconds
+
+                        ReminderTrigger.ELAPSED_TIME, ReminderTrigger.DISTANCE, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $triggerType")
                     }
                 }
                 .map { (value, reminders, imperial) ->
                     val triggered = reminders?.filter { reminder ->
-                        val isSpeedTrigger = triggerType == ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED || triggerType == ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED
-                        val reminderValue = if (isSpeedTrigger){
-                            // Convert m/s speed to km/h or mph
-                            if (imperial) reminder.interval * 0.44704 else reminder.interval * 0.277778
-                        } else {
-                            reminder.interval.toDouble()
+                        val reminderValue = when(triggerType) {
+                            ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> {
+                                if (imperial) reminder.interval?.times(0.44704) else reminder.interval?.times(0.277778)
+                            }
+                            ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED,
+                            ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED -> {
+                                reminder.intervalFloat
+                            }
+                            ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED,
+                            ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED -> {
+                                reminder.intervalFloat?.times(1000.0) // bar to mbar
+                            }
+
+                            ReminderTrigger.ELAPSED_TIME, ReminderTrigger.DISTANCE,
+                            ReminderTrigger.ENERGY_OUTPUT, ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED,
+                            ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED,
+                            ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED,
+                            ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED,
+                            ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED -> reminder.interval?.toDouble()
                         }
 
                         val triggerIsMet = when (triggerType){
                             ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED,
                             ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED,
                             ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED,
-                            ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED -> value > reminderValue
+                            ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED,
+                            ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED -> reminderValue != null && value > reminderValue
 
                             ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED,
                             ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED,
                             ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED,
-                            ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> value < reminderValue
+                            ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED,
+                            ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED -> reminderValue != null && value < reminderValue
 
-                            else -> error("Unsupported trigger type: $triggerType")
+                            ReminderTrigger.ELAPSED_TIME, ReminderTrigger.DISTANCE, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $triggerType")
                         }
 
                         reminder.isActive && reminder.trigger == triggerType && triggerIsMet
