@@ -63,6 +63,7 @@ import de.timklge.karooreminder.R
 import de.timklge.karooreminder.ReminderTrigger
 import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
+import io.hammerhead.karooext.models.HardwareType
 import io.hammerhead.karooext.models.PlayBeepPattern
 import io.hammerhead.karooext.models.UserProfile
 
@@ -326,7 +327,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             .fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
                             ReminderBeepPattern.entries.forEach { pattern ->
-                                val tones = pattern.tones
+                                val tones = if (karooSystem.hardwareType == HardwareType.K2) pattern.tonesKaroo2 else pattern.tonesKaroo3
 
                                 Row(modifier = Modifier
                                     .fillMaxWidth()

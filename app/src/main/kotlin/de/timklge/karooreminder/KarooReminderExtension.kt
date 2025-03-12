@@ -10,6 +10,7 @@ import de.timklge.karooreminder.screens.preferencesKey
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.extension.KarooExtension
 import io.hammerhead.karooext.models.DataType
+import io.hammerhead.karooext.models.HardwareType
 import io.hammerhead.karooext.models.InRideAlert
 import io.hammerhead.karooext.models.PlayBeepPattern
 import io.hammerhead.karooext.models.StreamState
@@ -122,7 +123,8 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                     applicationContext.sendBroadcast(intent)
 
                 if (displayedReminder.beepPattern != ReminderBeepPattern.NO_TONES) {
-                    karooSystem.dispatch(PlayBeepPattern(displayedReminder.beepPattern.tones))
+                    val tones = if (karooSystem.hardwareType == HardwareType.K2) displayedReminder.beepPattern.tonesKaroo2 else displayedReminder.beepPattern.tonesKaroo3
+                    karooSystem.dispatch(PlayBeepPattern(tones))
                     mediaPlayer?.start()
                 }
                 karooSystem.dispatch(displayedReminder.alert)
