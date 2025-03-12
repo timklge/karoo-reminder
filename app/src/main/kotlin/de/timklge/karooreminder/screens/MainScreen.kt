@@ -2,8 +2,10 @@ package de.timklge.karooreminder.screens
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -43,6 +46,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.core.edit
@@ -76,7 +80,7 @@ suspend fun saveReminders(context: Context, reminders: MutableList<Reminder>) {
 }
 
 @Composable
-fun ReminderAppNavHost(modifier: Modifier = Modifier, navController: NavHostController = rememberNavController()){
+fun ReminderAppNavHost(modifier: Modifier = Modifier, navController: NavHostController = rememberNavController(), onFinish: () -> Unit){
     val scope = rememberCoroutineScope()
     val reminders = remember {
         mutableStateListOf<Reminder>()
@@ -145,14 +149,14 @@ fun ReminderAppNavHost(modifier: Modifier = Modifier, navController: NavHostCont
             }, { navController.popBackStack() })
         }
         composable(route = "reminders") {
-            MainScreen(reminders, { reminder -> navController.navigate(route = "reminder/${reminder.id}") }, { navController.navigate(route = "create") })
+            MainScreen(reminders, { reminder -> navController.navigate(route = "reminder/${reminder.id}") }, { navController.navigate(route = "create") }, onFinish)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Reminder) -> Unit, onNavigateToCreateReminder: () -> Unit) {
+fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Reminder) -> Unit, onNavigateToCreateReminder: () -> Unit, onFinish: () -> Unit) {
     var karooConnected by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
     val karooSystem = remember { KarooSystemService(ctx) }
@@ -167,63 +171,83 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
 
     Scaffold(
         topBar = { TopAppBar(title = {Text("Reminder")}) },
-        floatingActionButtonPosition = FabPosition.End,
-        floatingActionButton = {
-            FloatingActionButton(onClick = {
-                onNavigateToCreateReminder()
-            }) {
-                Icon(Icons.Rounded.Add, "Add")
-            }
-        },
         content = {
-            Column(
-                Modifier
-                    .padding(it)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .background(MaterialTheme.colorScheme.background)) {
-                reminders.forEach { reminder ->
-                    Card(Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .alpha(if (reminder.isActive) 1f else 0.6f)
-                        .clickable { onNavigateToReminder(reminder) }
-                        .padding(5.dp), shape = RoundedCornerShape(corner = CornerSize(10.dp))
-                    ) {
-                        Row(
-                            Modifier
-                                .height(60.dp)
-                                .padding(5.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Surface(shape = CircleShape, color = Color(ContextCompat.getColor(ctx, reminder.displayForegroundColor?.colorRes ?: R.color.hRed)),
-                                modifier = Modifier
+            Box(Modifier.fillMaxSize()){
+                Column(
+                    Modifier
+                        .padding(it)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .background(MaterialTheme.colorScheme.background)) {
+                    reminders.forEach { reminder ->
+                        Card(Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                            .alpha(if (reminder.isActive) 1f else 0.6f)
+                            .clickable { onNavigateToReminder(reminder) }
+                            .padding(5.dp), shape = RoundedCornerShape(corner = CornerSize(10.dp))
+                        ) {
+                            Row(
+                                Modifier
                                     .height(60.dp)
-                                    .shadow(5.dp, CircleShape)
-                                    .width(40.dp), content = {})
+                                    .padding(5.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Surface(shape = CircleShape, color = Color(ContextCompat.getColor(ctx, reminder.displayForegroundColor?.colorRes ?: R.color.hRed)),
+                                    modifier = Modifier
+                                        .height(60.dp)
+                                        .shadow(5.dp, CircleShape)
+                                        .width(40.dp), content = {})
 
-                            Spacer(modifier = Modifier.width(10.dp))
+                                Spacer(modifier = Modifier.width(10.dp))
 
-                            Text(reminder.name)
+                                Text(reminder.name)
 
-                            Spacer(Modifier.weight(1.0f))
+                                Spacer(Modifier.weight(1.0f))
 
-                            Text("${reminder.trigger.getPrefix()}${reminder.interval}${reminder.trigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL)}")
+                                Text("${reminder.trigger.getPrefix()}${reminder.interval}${reminder.trigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL)}")
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.padding(30.dp))
+
+                    LaunchedEffect(Unit) {
+                        karooSystem.connect { connected ->
+                            karooConnected = connected
+                        }
+                    }
+
+                    if (showWarnings){
+                        if (reminders.isEmpty()) Text(modifier = Modifier.padding(5.dp), text = "No reminders added.")
+
+                        if (!karooConnected){
+                            Text(modifier = Modifier.padding(5.dp), text = "Could not read device status. Is your Karoo updated?")
                         }
                     }
                 }
 
-                LaunchedEffect(Unit) {
-                    karooSystem.connect { connected ->
-                        karooConnected = connected
-                    }
-                }
+                Image(
+                    painter = painterResource(id = R.drawable.back),
+                    contentDescription = "Back",
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(bottom = 10.dp)
+                        .size(54.dp)
+                        .clickable {
+                            onFinish()
+                        }
+                )
 
-                if (showWarnings){
-                    if (reminders.isEmpty()) Text(modifier = Modifier.padding(5.dp), text = "No reminders added.")
-
-                    if (!karooConnected){
-                        Text(modifier = Modifier.padding(5.dp), text = "Could not read device status. Is your Karoo updated?")
-                    }
-                }
+                Image(
+                    painter = painterResource(id = R.drawable.add),
+                    contentDescription = "Add",
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 10.dp)
+                        .size(54.dp)
+                        .clickable {
+                            onNavigateToCreateReminder()
+                        }
+                )
             }
         }
     )

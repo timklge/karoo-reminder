@@ -6,6 +6,10 @@
 
 Karoo extension that displays in-ride alerts based on custom triggers. Reminders can be set to activate after a specific time interval, distance traveled, energy output or when a sensor value is outside a defined range (e.g., heart rate exceeds zone 2).
 
+Compatible with Karoo 2 and Karoo 3 devices.
+
+<a href="https://www.buymeacoffee.com/timklge" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
 ![Reminder List](list.png)
 ![Reminder Detail](detail.png)
 ![Reminder in ride](reminder.png)

@@ -96,7 +96,7 @@ fun Flow<Int>.allIntermediateInts(): Flow<Int> = flow {
     }
 }
 
-class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.3") {
+class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.5") {
 
     companion object {
         const val TAG = "karoo-reminder"
@@ -122,13 +122,13 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", "1.1.3") {
                 val isAutoDismiss = displayedReminder.alert.autoDismissMs != null
                 val autoDismissMs = (displayedReminder.alert.autoDismissMs ?: 0L)
 
-                val intent = Intent("de.timklge.HIDE_POWERBAR").apply {
-                    putExtra("duration", (if (isAutoDismiss) autoDismissMs else 15_000L) + 1000L)
-                    putExtra("location", "top")
-                }
+                    val intent = Intent("de.timklge.HIDE_POWERBAR").apply {
+                        putExtra("duration", (if (isAutoDismiss) autoDismissMs else 15_000L) + 1000L)
+                        putExtra("location", "top")
+                    }
 
-                delay(1_000)
-                applicationContext.sendBroadcast(intent)
+                    delay(1_000)
+                    applicationContext.sendBroadcast(intent)
 
                 if (displayedReminder.beepPattern != ReminderBeepPattern.NO_TONES) {
                     karooSystem.dispatch(PlayBeepPattern(displayedReminder.beepPattern.tones))
