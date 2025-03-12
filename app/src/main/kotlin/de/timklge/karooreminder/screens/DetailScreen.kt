@@ -334,8 +334,6 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
 
             if (toneDialogVisible){
                 Dialog(onDismissRequest = { toneDialogVisible = false }) {
-                    var dialogSelectedTone by remember { mutableStateOf(selectedTone) }
-
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -353,11 +351,13 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                                 Row(modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        dialogSelectedTone = pattern
+                                        selectedTone = pattern
                                         karooSystem.dispatch(PlayBeepPattern(tones))
+                                        toneDialogVisible = false
                                     }, verticalAlignment = Alignment.CenterVertically) {
-                                    RadioButton(selected = dialogSelectedTone == pattern, onClick = {
-                                        dialogSelectedTone = pattern
+                                    RadioButton(selected = selectedTone == pattern, onClick = {
+                                        selectedTone = pattern
+                                        toneDialogVisible = false
                                         karooSystem.dispatch(PlayBeepPattern(tones))
                                     })
                                     Text(
@@ -365,25 +365,6 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                                         modifier = Modifier.padding(start = 10.dp)
                                     )
                                 }
-                            }
-
-                            FilledTonalButton(modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp), onClick = {
-                                selectedTone = dialogSelectedTone
-                                toneDialogVisible = false
-                            }) {
-                                Icon(Icons.Default.Done, contentDescription = "Save")
-                                Text("Save")
-                            }
-
-                            FilledTonalButton(modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp), onClick = {
-                                toneDialogVisible = false
-                            }) {
-                                Icon(Icons.Default.Close, contentDescription = "Cancel")
-                                Text("Cancel")
                             }
                         }
                     }
