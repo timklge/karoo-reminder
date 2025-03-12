@@ -325,7 +325,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                         ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED -> dataPoint?.singleValue
                     }
                 }
-                .filter { it > 0.0 }
+                .filter { it != 0.0 }
                 .combine(preferences) { value, reminders -> StreamData(value, reminders) }
                 .combine(karooSystem.streamUserProfile()) { streamData, profile -> streamData.copy(imperial = profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL) }
                 .let {
