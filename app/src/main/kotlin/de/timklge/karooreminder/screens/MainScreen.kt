@@ -208,8 +208,6 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
                         }
                     }
 
-                    Spacer(modifier = Modifier.padding(30.dp))
-
                     LaunchedEffect(Unit) {
                         karooSystem.connect { connected ->
                             karooConnected = connected
@@ -223,6 +221,8 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
                             Text(modifier = Modifier.padding(5.dp), text = "Could not read device status. Is your Karoo updated?")
                         }
                     }
+
+                    Spacer(modifier = Modifier.padding(30.dp))
                 }
 
                 Image(
