@@ -307,7 +307,24 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
             }
 
             karooSystem.streamDataFlow(dataType)
-                .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue }
+                .mapNotNull {
+                    val dataPoint = (it as? StreamState.Streaming)?.dataPoint
+
+                    @Suppress("KotlinConstantConditions")
+                    when (triggerType) {
+                        ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> dataPoint?.values?.get(DataType.Field.CORE_TEMP)
+                        ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED,
+                        ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> dataPoint?.values?.get(DataType.Field.TIRE_PRESSURE)
+
+                        ReminderTrigger.ELAPSED_TIME, ReminderTrigger.DISTANCE, ReminderTrigger.ENERGY_OUTPUT,
+                        ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED,
+                        ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED,
+                        ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED,
+                        ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED,
+                        ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED,
+                        ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED -> dataPoint?.singleValue
+                    }
+                }
                 .filter { it != 0.0 }
                 .combine(preferences) { value, reminders -> StreamData(value, reminders) }
                 .combine(karooSystem.streamUserProfile()) { streamData, profile -> streamData.copy(

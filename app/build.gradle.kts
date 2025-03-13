@@ -71,7 +71,7 @@ tasks.register("generateManifest") {
             "latestVersionCode" to android.defaultConfig.versionCode,
             "developer" to "timklge",
             "description" to "Shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
-            "releaseNotes" to "* Use imperial units for temperature and tire pressure if selected \n" +
+            "releaseNotes" to "* Use imperial units for temperature and tire pressure if selected\n" +
                 "* Add additional trigger types for ambient and CORE temperature, gradient and tire pressure\n" +
                 "* Add additional beep patterns for Karoo 3"
         )
