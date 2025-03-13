@@ -308,7 +308,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
             karooSystem.streamDataFlow(dataType)
                 .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue }
-                .filter { it > 0.0 }
+                .filter { it != 0.0 }
                 .combine(preferences) { value, reminders -> StreamData(value, reminders) }
                 .combine(karooSystem.streamUserProfile()) { streamData, profile -> streamData.copy(
                     distanceImperial = profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL,
@@ -371,7 +371,13 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                             ReminderTrigger.ELAPSED_TIME, ReminderTrigger.DISTANCE, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $triggerType")
                         }
 
-                        reminder.isActive && reminder.trigger == triggerType && triggerIsMet
+                        val result = reminder.isActive && reminder.trigger == triggerType && triggerIsMet
+                        /* if (result){
+                            Log.i(TAG, "Triggered range reminder: ${reminder.name} (${triggerType}): actual value $actualValue, threshold $triggerThreshold")
+                        } else if(reminder.trigger == triggerType && reminder.isActive) {
+                            Log.i(TAG, "Not triggered range reminder: ${reminder.name} (${triggerType}): actual value $actualValue, threshold $triggerThreshold")
+                        } */
+                        result
                     }
 
                     triggered
@@ -380,9 +386,8 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                 .filter { it.isNotEmpty() }
                 .throttle(1_000 * 60) // At most once every minute
                 .collectLatest { reminders ->
-                    Log.i(TAG, "Triggered range reminder: ${reminders.size} reminders")
-
                     reminders.forEach { reminder ->
+                        Log.d(TAG, "Dispatching reminder: ${reminder.name}")
                         reminderChannel.send(
                             DisplayedReminder(
                                 reminder.tone, triggerType, InRideAlert(

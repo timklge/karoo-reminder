@@ -36,6 +36,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,6 +75,11 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     val karooSystem = remember { KarooSystemService(ctx) }
     LaunchedEffect(Unit) {
         karooSystem.connect{}
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            karooSystem.disconnect()
+        }
     }
     var title by remember { mutableStateOf(reminder.name) }
     var text by remember { mutableStateOf(reminder.text) }

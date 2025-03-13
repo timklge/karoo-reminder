@@ -33,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -169,6 +170,18 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
         showWarnings = true
     }
 
+    LaunchedEffect(Unit) {
+        karooSystem.connect { connected ->
+            karooConnected = connected
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            karooSystem.disconnect()
+        }
+    }
+
     Scaffold(
         topBar = { TopAppBar(title = {Text("Reminder")}) },
         content = {
@@ -206,12 +219,6 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
                                 val value = if (reminder.trigger.isDecimalValue()) java.text.DecimalFormat("#.##").format(reminder.intervalFloat) else reminder.interval
                                 Text("${reminder.trigger.getPrefix()}${value}${reminder.trigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL)}")
                             }
-                        }
-                    }
-
-                    LaunchedEffect(Unit) {
-                        karooSystem.connect { connected ->
-                            karooConnected = connected
                         }
                     }
 
