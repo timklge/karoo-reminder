@@ -13,6 +13,7 @@ import io.hammerhead.karooext.models.DataType
 import io.hammerhead.karooext.models.HardwareType
 import io.hammerhead.karooext.models.InRideAlert
 import io.hammerhead.karooext.models.PlayBeepPattern
+import io.hammerhead.karooext.models.RideState
 import io.hammerhead.karooext.models.StreamState
 import io.hammerhead.karooext.models.TurnScreenOn
 import io.hammerhead.karooext.models.UserProfile
@@ -277,8 +278,6 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
         }
     }
 
-    data class StreamData(val value: Double, val reminders: MutableList<Reminder>? = null, val distanceImperial: Boolean = false, val temperatureImperial: Boolean = false)
-
     private fun startRangeExceededJob(triggerType: ReminderTrigger): Job {
         return CoroutineScope(Dispatchers.IO).launch {
             val preferences = applicationContext.dataStore.data.map { remindersJson ->
@@ -306,7 +305,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                 ReminderTrigger.DISTANCE, ReminderTrigger.ELAPSED_TIME, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $triggerType")
             }
 
-            karooSystem.streamDataFlow(dataType)
+            val valueStream = karooSystem.streamDataFlow(dataType)
                 .mapNotNull {
                     val dataPoint = (it as? StreamState.Streaming)?.dataPoint
 
@@ -326,12 +325,15 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                     }
                 }
                 .filter { it != 0.0 }
-                .combine(preferences) { value, reminders -> StreamData(value, reminders) }
-                .combine(karooSystem.streamUserProfile()) { streamData, profile -> streamData.copy(
-                    distanceImperial = profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL,
-                    temperatureImperial = profile.preferredUnit.temperature == UserProfile.PreferredUnit.UnitType.IMPERIAL
-                ) }
-                .let {
+
+            data class StreamData(val value: Double, val reminders: MutableList<Reminder>, val distanceImperial: Boolean, val temperatureImperial: Boolean, val rideState: RideState)
+
+            combine(valueStream, preferences, karooSystem.streamUserProfile(), karooSystem.streamRideState()) { value, reminders, profile, rideState ->
+                StreamData(distanceImperial = profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL, temperatureImperial = profile.preferredUnit.temperature == UserProfile.PreferredUnit.UnitType.IMPERIAL,
+                    value = value, reminders = reminders, rideState = rideState)
+            }.filter {
+                it.rideState is RideState.Recording
+            }.let {
                     @Suppress("KotlinConstantConditions")
                     when (triggerType){
                         // Tire pressure, gradient and temperature triggers do not require ongoing measurements, as measurement rate is unknown
@@ -350,7 +352,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                     }
                 }
                 .map { (actualValue, reminders, distanceImperial, temperatureImperial) ->
-                    val triggered = reminders?.filter { reminder ->
+                    val triggered = reminders.filter { reminder ->
                         val triggerThreshold = when(triggerType) {
                             ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> {
                                 if (distanceImperial) reminder.interval?.times(0.44704) else reminder.interval?.times(0.277778)
