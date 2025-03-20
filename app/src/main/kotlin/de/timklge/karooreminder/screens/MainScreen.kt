@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.core.edit
@@ -212,9 +213,7 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
 
                                 Spacer(modifier = Modifier.width(10.dp))
 
-                                Text(reminder.name)
-
-                                Spacer(Modifier.weight(1.0f))
+                                Text(modifier = Modifier.weight(1.0f), text = reminder.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
 
                                 val value = if (reminder.trigger.isDecimalValue()) java.text.DecimalFormat("#.##").format(reminder.intervalFloat) else reminder.interval
                                 Text("${reminder.trigger.getPrefix()}${value}${reminder.trigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL)}")
