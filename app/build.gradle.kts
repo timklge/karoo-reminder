@@ -71,9 +71,9 @@ tasks.register("generateManifest") {
             "latestVersionCode" to android.defaultConfig.versionCode,
             "developer" to "timklge",
             "description" to "Shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
-            "releaseNotes" to "* Use imperial units for temperature and tire pressure if selected\n" +
-                "* Add additional trigger types for ambient and CORE temperature, gradient and tire pressure\n" +
-                "* Add additional beep patterns for Karoo 3"
+            "releaseNotes" to "* Only show reminders while riding\n" +
+                    "* Limit reminder title length in list\n" +
+                    "* Use imperial units for temperature and tire pressure if selected\n"
         )
 
         val gson = groovy.json.JsonBuilder(manifest).toPrettyString()
