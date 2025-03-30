@@ -1,5 +1,11 @@
 package de.timklge.karooreminder
 
+import android.content.Context
+import android.util.Log
+import de.timklge.karooreminder.KarooReminderExtension.Companion.TAG
+import de.timklge.karooreminder.screens.Reminder
+import de.timklge.karooreminder.screens.defaultReminders
+import de.timklge.karooreminder.screens.preferencesKey
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.OnStreamState
 import io.hammerhead.karooext.models.RideState
@@ -9,6 +15,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
 
 fun KarooSystemService.streamDataFlow(dataTypeId: String): Flow<StreamState> {
     return callbackFlow {
@@ -39,6 +47,19 @@ fun KarooSystemService.streamUserProfile(): Flow<UserProfile> {
         }
         awaitClose {
             removeConsumer(listenerId)
+        }
+    }
+}
+
+fun Context.streamPreferences(): Flow<MutableList<Reminder>> {
+    return applicationContext.dataStore.data.map { remindersJson ->
+        try {
+            Json.decodeFromString<MutableList<Reminder>>(
+                remindersJson[preferencesKey] ?: defaultReminders
+            )
+        } catch(e: Throwable){
+            Log.e(TAG,"Failed to read preferences", e)
+            mutableListOf()
         }
     }
 }

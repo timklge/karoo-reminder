@@ -118,8 +118,6 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
     private lateinit var karooSystem: KarooSystemService
 
-    private var jobs: MutableSet<Job> = mutableSetOf()
-
     data class DisplayedReminder(val beepPattern: ReminderBeepPattern, val trigger: ReminderTrigger, val alert: InRideAlert)
 
     private var reminderChannel = Channel<DisplayedReminder>(2, BufferOverflow.DROP_OLDEST)
@@ -162,6 +160,9 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
         }
     }
 
+    private lateinit var receiveJob: Job
+    private lateinit var triggerStreamJob: Job
+
     override fun onCreate() {
         super.onCreate()
 
@@ -169,10 +170,9 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
         karooSystem = KarooSystemService(applicationContext)
 
-        val receiveJob = CoroutineScope(Dispatchers.IO).launch {
+        receiveJob = CoroutineScope(Dispatchers.IO).launch {
             receiverWorker()
         }
-        jobs.add(receiveJob)
 
         karooSystem.connect { connected ->
             if (connected) {
@@ -180,75 +180,88 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
             }
         }
 
-        val distanceJob = startIntervalJob(ReminderTrigger.DISTANCE) {
-            karooSystem.streamDataFlow(DataType.Type.DISTANCE)
-                .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
-                .combine(karooSystem.streamUserProfile()) { distance, profile -> distance to profile }
-                .map { (distance, profile) ->
-                    if (profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL){
-                        (distance / 1609.344).toInt()
-                    } else {
-                        (distance / 1000.0).toInt()
+        val triggerJobs = mutableSetOf<Job>()
+
+        triggerStreamJob = CoroutineScope(Dispatchers.IO).launch {
+            streamPreferences().collect { reminders ->
+                triggerJobs.forEach { it.cancel() }
+                triggerJobs.clear()
+
+                if (reminders.any { it.trigger == ReminderTrigger.DISTANCE }){
+                    val distanceJob = startIntervalJob(ReminderTrigger.DISTANCE) {
+                        karooSystem.streamDataFlow(DataType.Type.DISTANCE)
+                            .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
+                            .combine(karooSystem.streamUserProfile()) { distance, profile -> distance to profile }
+                            .map { (distance, profile) ->
+                                if (profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL){
+                                    (distance / 1609.344).toInt()
+                                } else {
+                                    (distance / 1000.0).toInt()
+                                }
+                            }
+                            .distinctUntilChanged()
+                            .filterNot { it == 0 }
+                    }
+                    triggerJobs.add(distanceJob)
+                }
+
+                if (reminders.any { it.trigger == ReminderTrigger.ELAPSED_TIME }){
+                    val elapsedTimeJob = startIntervalJob(ReminderTrigger.ELAPSED_TIME) {
+                        karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)
+                            .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
+                            .map { (it / 1000 / 60).toInt() }
+                            .distinctUntilChanged()
+                            .filterNot { it == 0 }
+                    }
+                    triggerJobs.add(elapsedTimeJob)
+                }
+
+                if (reminders.any { it.trigger == ReminderTrigger.ENERGY_OUTPUT }){
+                    val energyOutputJob = startIntervalJob(ReminderTrigger.ENERGY_OUTPUT) {
+                        karooSystem.streamDataFlow(DataType.Type.ENERGY_OUTPUT)
+                            .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
+                            .map { it.toInt() }
+                            .distinctUntilChanged()
+                            .filterNot { it == 0 }
+                            .allIntermediateInts()
+                    }
+                    triggerJobs.add(energyOutputJob)
+                }
+
+                val intervalTriggers = setOf(
+                    ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED,
+                    ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED,
+                    ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED,
+                    ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED,
+                    ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED,
+                    ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED,
+                    ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED,
+                    ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED,
+                    ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED,
+                    ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED,
+                    ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED,
+                    ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED,
+                    ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED,
+                    ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED,
+                    ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED,
+                    ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED,
+                    ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED,
+                    ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED
+                )
+
+                intervalTriggers.forEach { trigger ->
+                    if (reminders.any { it.trigger == trigger }){
+                        val job = startRangeExceededJob(trigger)
+                        triggerJobs.add(job)
                     }
                 }
-                .distinctUntilChanged()
-                .filterNot { it == 0 }
+            }
         }
-        jobs.add(distanceJob)
-
-        jobs.addAll(listOf(
-            startRangeExceededJob(ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED),
-            startRangeExceededJob(ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED)
-        ))
-
-        val elapsedTimeJob = startIntervalJob(ReminderTrigger.ELAPSED_TIME) {
-            karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)
-                .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
-                .map { (it / 1000 / 60).toInt() }
-                .distinctUntilChanged()
-                .filterNot { it == 0 }
-        }
-        jobs.add(elapsedTimeJob)
-
-        val energyOutputJob = startIntervalJob(ReminderTrigger.ENERGY_OUTPUT) {
-            karooSystem.streamDataFlow(DataType.Type.ENERGY_OUTPUT)
-                .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
-                .map { it.toInt() }
-                .distinctUntilChanged()
-                .filterNot { it == 0 }
-                .allIntermediateInts()
-        }
-        jobs.add(energyOutputJob)
     }
 
     private fun startIntervalJob(trigger: ReminderTrigger, flow: () -> Flow<Int>): Job {
         return CoroutineScope(Dispatchers.IO).launch {
-            val preferences = applicationContext.dataStore.data.map { remindersJson ->
-                try {
-                    Json.decodeFromString<MutableList<Reminder>>(
-                        remindersJson[preferencesKey] ?: defaultReminders
-                    )
-                } catch(e: Throwable){
-                    Log.e(TAG,"Failed to read preferences", e)
-                    mutableListOf()
-                }
-            }
+            val preferences = streamPreferences()
 
             flow()
                 .filterNot { it == 0 }
@@ -281,16 +294,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
     private fun startRangeExceededJob(triggerType: ReminderTrigger): Job {
         return CoroutineScope(Dispatchers.IO).launch {
-            val preferences = applicationContext.dataStore.data.map { remindersJson ->
-                try {
-                    Json.decodeFromString<MutableList<Reminder>>(
-                        remindersJson[preferencesKey] ?: defaultReminders
-                    )
-                } catch (e: Throwable) {
-                    Log.e(TAG, "Failed to read preferences", e)
-                    mutableListOf()
-                }
-            }
+            val preferences = streamPreferences()
 
             val dataType = when (triggerType) {
                 ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.HEART_RATE
@@ -424,8 +428,8 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
     }
 
     override fun onDestroy() {
-        jobs.forEach { job -> job.cancel() }
-        jobs.clear()
+        receiveJob.cancel()
+        triggerStreamJob.cancel()
 
         karooSystem.disconnect()
         super.onDestroy()
