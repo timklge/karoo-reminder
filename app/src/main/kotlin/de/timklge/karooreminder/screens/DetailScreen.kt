@@ -114,6 +114,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             text = text,
             displayForegroundColor = selectedColor,
             isActive = isActive,
+            smoothSetting = smoothSetting,
             trigger = selectedTrigger,
             isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15)
     }
@@ -175,6 +176,18 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 singleLine = true
             )
 
+            if (selectedTrigger.hasSmoothedDataTypes()){
+                FilledTonalButton(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp), onClick =  {
+                        smoothSettingDialogVisible = true
+                    }) {
+                    Icon(Icons.Default.Build, contentDescription = "Change Smooth Setting", modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text("Average: ${smoothSetting.label}")
+                }
+            }
+
             ColorDialog(
                 state = colorDialogState,
                 selection = ColorSelection(
@@ -228,18 +241,6 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 Icon(painterResource(R.drawable.volume), contentDescription = "Tone", modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(5.dp))
                 Text("Tone: ${selectedTone.displayName}")
-            }
-
-            if (selectedTrigger.hasSmoothedDataTypes()){
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        smoothSettingDialogVisible = true
-                    }, verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Build, contentDescription = "Change Smooth Setting", modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text("Rolling Average: ${smoothSetting.label}")
-                }
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {

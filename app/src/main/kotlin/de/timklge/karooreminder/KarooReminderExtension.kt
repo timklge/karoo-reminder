@@ -5,8 +5,6 @@ import android.media.MediaPlayer
 import android.util.Log
 import de.timklge.karooreminder.screens.Reminder
 import de.timklge.karooreminder.screens.ReminderBeepPattern
-import de.timklge.karooreminder.screens.defaultReminders
-import de.timklge.karooreminder.screens.preferencesKey
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.extension.KarooExtension
 import io.hammerhead.karooext.models.DataType
@@ -34,8 +32,8 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 
 enum class SmoothSetting(val label: String) {
     NONE("None"),
@@ -119,7 +117,7 @@ enum class ReminderTrigger(val id: String, val label: String) {
                 }
             }
 
-            else -> error("Unsupported trigger type for smoothing: $this")
+            else -> getDataType()
         }
     }
 
@@ -301,9 +299,11 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                 )
 
                 intervalTriggers.forEach { trigger ->
-                    if (reminders.any { it.trigger == trigger }){
-                        val job = startRangeExceededJob(trigger)
-                        triggerJobs.add(job)
+                    SmoothSetting.entries.forEach { smoothSetting ->
+                        if (reminders.any { it.trigger == trigger && it.smoothSetting == smoothSetting }){
+                            val job = startRangeExceededJob(trigger, smoothSetting)
+                            triggerJobs.add(job)
+                        }
                     }
                 }
             }
@@ -341,11 +341,13 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
         }
     }
 
-    private fun startRangeExceededJob(triggerType: ReminderTrigger): Job {
+    private fun startRangeExceededJob(triggerType: ReminderTrigger, smoothSetting: SmoothSetting): Job {
         return CoroutineScope(Dispatchers.IO).launch {
             val preferences = streamPreferences()
 
-            val valueStream = karooSystem.streamDataFlow(triggerType.getDataType())
+            Log.i(TAG, "Starting range exceeded job for trigger $triggerType with smooth setting $smoothSetting")
+
+            val valueStream = karooSystem.streamDataFlow(triggerType.getSmoothedDataType(smoothSetting))
                 .mapNotNull {
                     val dataPoint = (it as? StreamState.Streaming)?.dataPoint
 
@@ -430,13 +432,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                             ReminderTrigger.ELAPSED_TIME, ReminderTrigger.DISTANCE, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $triggerType")
                         }
 
-                        val result = reminder.isActive && reminder.trigger == triggerType && triggerIsMet
-                        /* if (result){
-                            Log.i(TAG, "Triggered range reminder: ${reminder.name} (${triggerType}): actual value $actualValue, threshold $triggerThreshold")
-                        } else if(reminder.trigger == triggerType && reminder.isActive) {
-                            Log.i(TAG, "Not triggered range reminder: ${reminder.name} (${triggerType}): actual value $actualValue, threshold $triggerThreshold")
-                        } */
-                        result
+                        reminder.isActive && reminder.trigger == triggerType && triggerIsMet
                     }
 
                     triggered
@@ -444,6 +440,9 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                 .filterNotNull()
                 .filter { it.isNotEmpty() }
                 .throttle(1_000 * 60) // At most once every minute
+                .onCompletion {
+                    Log.i(TAG, "Range exceeded job for trigger $triggerType with smooth setting $smoothSetting completed")
+                }
                 .collectLatest { reminders ->
                     reminders.forEach { reminder ->
                         Log.d(TAG, "Dispatching reminder: ${reminder.name}")
