@@ -71,9 +71,7 @@ tasks.register("generateManifest") {
             "latestVersionCode" to android.defaultConfig.versionCode,
             "developer" to "timklge",
             "description" to "Shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
-            "releaseNotes" to "* Only show reminders while riding\n" +
-                    "* Limit reminder title length in list\n" +
-                    "* Use imperial units for temperature and tire pressure if selected\n"
+            "releaseNotes" to "* Add rolling average setting for power triggers"
         )
 
         val gson = groovy.json.JsonBuilder(manifest).toPrettyString()
