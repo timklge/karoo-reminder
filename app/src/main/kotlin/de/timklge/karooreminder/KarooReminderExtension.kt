@@ -37,6 +37,17 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
+enum class SmoothSetting {
+    NONE,
+    SMOOTH_3S,
+    SMOOTH_10S,
+    SMOOTH_30S,
+    SMOOTH_20M,
+    SMOOTH_60M,
+    SMOOTH_LAP,
+    SMOOTH_RIDE
+}
+
 enum class ReminderTrigger(val id: String, val label: String) {
     ELAPSED_TIME("elapsed_time", "Elapsed Time"),
     DISTANCE("distance", "Distance"),
@@ -92,6 +103,41 @@ enum class ReminderTrigger(val id: String, val label: String) {
             this == REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED || this == REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED ||
             this == AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED || this == AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED ||
             this == GRADIENT_LIMIT_MAXIMUM_EXCEEDED || this == GRADIENT_LIMIT_MINIMUM_EXCEEDED
+
+    fun getSmoothedDataType(smoothSetting: SmoothSetting): String {
+        return when(this) {
+            POWER_LIMIT_MAXIMUM_EXCEEDED, POWER_LIMIT_MINIMUM_EXCEEDED -> {
+                when (smoothSetting) {
+                    SmoothSetting.NONE -> DataType.Type.POWER
+                    SmoothSetting.SMOOTH_3S -> DataType.Type.SMOOTHED_3S_AVERAGE_POWER
+                    SmoothSetting.SMOOTH_10S -> DataType.Type.SMOOTHED_10S_AVERAGE_POWER
+                    SmoothSetting.SMOOTH_30S -> DataType.Type.SMOOTHED_30S_AVERAGE_POWER
+                    SmoothSetting.SMOOTH_20M -> DataType.Type.SMOOTHED_20M_AVERAGE_POWER
+                    SmoothSetting.SMOOTH_60M -> DataType.Type.SMOOTHED_1HR_AVERAGE_POWER
+                    SmoothSetting.SMOOTH_LAP -> DataType.Type.POWER_LAP
+                    SmoothSetting.SMOOTH_RIDE -> DataType.Type.AVERAGE_POWER
+                }
+            }
+
+            else -> error("Unsupported trigger type for smoothing: $this")
+        }
+    }
+
+    fun getDataType(): String {
+        return when (this) {
+            ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.HEART_RATE
+            POWER_LIMIT_MAXIMUM_EXCEEDED, POWER_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.SMOOTHED_3S_AVERAGE_POWER
+            ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.SMOOTHED_3S_AVERAGE_SPEED
+            ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.SMOOTHED_3S_AVERAGE_CADENCE
+            ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.CORE_TEMP
+            ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TIRE_PRESSURE_FRONT
+            ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TIRE_PRESSURE_REAR
+            ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.ELEVATION_GRADE
+            ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TEMPERATURE
+
+            ReminderTrigger.DISTANCE, ReminderTrigger.ELAPSED_TIME, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $this")
+        }
+    }
 }
 
 fun Flow<Int>.allIntermediateInts(): Flow<Int> = flow {
@@ -295,21 +341,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
         return CoroutineScope(Dispatchers.IO).launch {
             val preferences = streamPreferences()
 
-            val dataType = when (triggerType) {
-                ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.HEART_RATE
-                ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.SMOOTHED_3S_AVERAGE_POWER
-                ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.SMOOTHED_3S_AVERAGE_SPEED
-                ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.SMOOTHED_3S_AVERAGE_CADENCE
-                ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.CORE_TEMP
-                ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TIRE_PRESSURE_FRONT
-                ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TIRE_PRESSURE_REAR
-                ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.ELEVATION_GRADE
-                ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TEMPERATURE
-
-                ReminderTrigger.DISTANCE, ReminderTrigger.ELAPSED_TIME, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $triggerType")
-            }
-
-            val valueStream = karooSystem.streamDataFlow(dataType)
+            val valueStream = karooSystem.streamDataFlow(triggerType.getDataType())
                 .mapNotNull {
                     val dataPoint = (it as? StreamState.Streaming)?.dataPoint
 
