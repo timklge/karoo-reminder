@@ -37,15 +37,15 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-enum class SmoothSetting {
-    NONE,
-    SMOOTH_3S,
-    SMOOTH_10S,
-    SMOOTH_30S,
-    SMOOTH_20M,
-    SMOOTH_60M,
-    SMOOTH_LAP,
-    SMOOTH_RIDE
+enum class SmoothSetting(val label: String) {
+    NONE("None"),
+    SMOOTH_3S("3 seconds"),
+    SMOOTH_10S("10 seconds"),
+    SMOOTH_30S("30 seconds"),
+    SMOOTH_20M("20 minutes"),
+    SMOOTH_60M("60 minutes"),
+    SMOOTH_LAP("Lap"),
+    SMOOTH_RIDE("Ride");
 }
 
 enum class ReminderTrigger(val id: String, val label: String) {
@@ -121,6 +121,10 @@ enum class ReminderTrigger(val id: String, val label: String) {
 
             else -> error("Unsupported trigger type for smoothing: $this")
         }
+    }
+
+    fun hasSmoothedDataTypes(): Boolean {
+        return this == POWER_LIMIT_MAXIMUM_EXCEEDED || this == POWER_LIMIT_MINIMUM_EXCEEDED
     }
 
     fun getDataType(): String {

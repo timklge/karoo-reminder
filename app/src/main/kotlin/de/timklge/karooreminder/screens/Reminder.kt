@@ -5,6 +5,7 @@ import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import de.timklge.karooreminder.R
 import de.timklge.karooreminder.ReminderTrigger
+import de.timklge.karooreminder.SmoothSetting
 import io.hammerhead.karooext.models.PlayBeepPattern
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -131,6 +132,8 @@ class Reminder(val id: Int, var name: String,
                var interval: Int? = null,
                /** Trigger value used by temperature, gradient, tire pressure triggers */
                var intervalFloat: Double? = null,
+               /** Smooth interval used by power, speed triggers */
+               var smoothSetting: SmoothSetting = SmoothSetting.SMOOTH_3S,
                var text: String,
                var displayForegroundColor: ReminderColor? = null,
                @Deprecated("Use displayForegroundColor instead")

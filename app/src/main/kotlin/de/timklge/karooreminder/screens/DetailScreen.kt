@@ -62,6 +62,7 @@ import com.maxkeppeler.sheets.color.models.MultipleColors
 import com.maxkeppeler.sheets.color.models.SingleColor
 import de.timklge.karooreminder.R
 import de.timklge.karooreminder.ReminderTrigger
+import de.timklge.karooreminder.SmoothSetting
 import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.HardwareType
@@ -92,11 +93,13 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             reminder.interval.toString()
         })
     }
+    var smoothSetting by remember { mutableStateOf(reminder.smoothSetting) }
     var isActive by remember { mutableStateOf(reminder.isActive) }
     var autoDismiss by remember { mutableStateOf(reminder.isAutoDismiss) }
     var deleteDialogVisible by remember { mutableStateOf(false) }
     var toneDialogVisible by remember { mutableStateOf(false) }
     var triggerDialogVisible by remember { mutableStateOf(false) }
+    var smoothSettingDialogVisible by remember { mutableStateOf(false) }
     var selectedTone by remember { mutableStateOf(reminder.tone) }
     var autoDismissSeconds by remember { mutableStateOf(reminder.autoDismissSeconds.toString()) }
     var selectedTrigger by remember { mutableStateOf(reminder.trigger) }
@@ -227,6 +230,18 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 Text("Tone: ${selectedTone.displayName}")
             }
 
+            if (selectedTrigger.hasSmoothedDataTypes()){
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        smoothSettingDialogVisible = true
+                    }, verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Build, contentDescription = "Change Smooth Setting", modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text("Rolling Average: ${smoothSetting.label}")
+                }
+            }
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(checked = autoDismiss, onCheckedChange = { autoDismiss = it})
                 Spacer(modifier = Modifier.width(10.dp))
@@ -331,6 +346,41 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                                             )
                                         }
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (smoothSettingDialogVisible) {
+                Dialog(onDismissRequest = { smoothSettingDialogVisible = false }) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        shape = RoundedCornerShape(10.dp),
+                    ) {
+                        Column(modifier = Modifier
+                            .padding(5.dp)
+                            .verticalScroll(rememberScrollState())
+                            .fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                            SmoothSetting.entries.forEach { setting ->
+                                Row(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        smoothSetting = setting
+                                        smoothSettingDialogVisible = false
+                                    }, verticalAlignment = Alignment.CenterVertically) {
+                                    RadioButton(selected = smoothSetting == setting, onClick = {
+                                        smoothSetting = setting
+                                        smoothSettingDialogVisible = false
+                                    })
+                                    Text(
+                                        text = setting.label,
+                                        modifier = Modifier.padding(start = 10.dp)
+                                    )
                                 }
                             }
                         }
