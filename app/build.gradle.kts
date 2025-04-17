@@ -69,8 +69,8 @@ tasks.register("generateManifest") {
             "latestApkUrl" to "https://github.com/timklge/karoo-reminder/releases/latest/download/app-release.apk",
             "latestVersion" to android.defaultConfig.versionName,
             "latestVersionCode" to android.defaultConfig.versionCode,
-            "developer" to "timklge",
-            "description" to "Shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
+            "developer" to "github.com/timklge",
+            "description" to "Open-source extension that shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
             "releaseNotes" to "* Add rolling average setting for power triggers"
         )
 
