@@ -30,6 +30,10 @@ If you are using a Karoo 2, you can use manual sideloading:
 - Icon is `timers` by [boxicons.com](https://boxicons.com) (MIT-licensed).
 - Reminder sound played over bluetooth is `SweetAlertSound5.wav` by `KIZILSUNGUR` from [freesound.org](https://freesound.org/people/KIZILSUNGUR/sounds/72129/) (CC0).
 
+## Crashlytics
+
+This app uses Google Crashlytics for crash reporting to help improve stability and performance.
+
 ## Links
 
 [karoo-ext source](https://github.com/hammerheadnav/karoo-ext)

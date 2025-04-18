@@ -1,9 +1,11 @@
-import org.jose4j.base64url.Base64
+import java.util.Base64
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
     kotlin("plugin.serialization") version "2.0.20"
 }
 
@@ -27,7 +29,7 @@ android {
 
             val base64keystore: String = env["KEYSTORE_BASE64"] ?: ""
             val keystoreFile: File = File.createTempFile("keystore", ".jks")
-            keystoreFile.writeBytes(Base64.decode(base64keystore))
+            keystoreFile.writeBytes(Base64.getDecoder().decode(base64keystore))
             storeFile = keystoreFile
             storePassword = env["KEYSTORE_PASSWORD"]
         }
@@ -55,6 +57,23 @@ android {
     }
 }
 
+tasks.register("addGoogleServicesJson") {
+    description = "Adds google-services.json to the project"
+    group = "build"
+
+    doLast {
+            val googleServicesJson = System.getenv("GOOGLE_SERVICES_JSON_BASE64")
+            ?.let { Base64.getDecoder().decode(it) }
+            ?.let { String(it) }
+        if (googleServicesJson != null) {
+            val jsonFile = file("$projectDir/google-services.json")
+            jsonFile.writeText(googleServicesJson)
+            println("Added google-services.json to the project")
+        } else {
+            println("No GOOGLE_SERVICES_JSON_BASE64 environment variable found, skipping...")
+        }
+    }
+}
 
 tasks.register("generateManifest") {
     description = "Generates manifest.json with current version information"
@@ -82,6 +101,7 @@ tasks.register("generateManifest") {
 
 tasks.named("assemble") {
     dependsOn("generateManifest")
+    dependsOn("addGoogleServicesJson")
 }
 
 dependencies {
@@ -95,4 +115,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.color)
     implementation(libs.androidx.datastore.preferences)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
 }
