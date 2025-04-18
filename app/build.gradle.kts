@@ -90,7 +90,7 @@ tasks.register("generateManifest") {
             "latestVersionCode" to android.defaultConfig.versionCode,
             "developer" to "timklge",
             "description" to "Shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
-            "releaseNotes" to "* Add rolling average setting for power triggers"
+            "releaseNotes" to "* Add crashlytics\n* Add rolling average setting for power triggers"
         )
 
         val gson = groovy.json.JsonBuilder(manifest).toPrettyString()
