@@ -63,15 +63,20 @@ tasks.register("generateManifest") {
     doLast {
         val manifestFile = file("$projectDir/manifest.json")
         val manifest = mapOf(
-            "label" to "karoo-reminder",
+            "label" to "Reminder",
             "packageName" to "de.timklge.karooreminder",
             "iconUrl" to "https://github.com/timklge/karoo-reminder/releases/latest/download/karoo-reminder.png",
             "latestApkUrl" to "https://github.com/timklge/karoo-reminder/releases/latest/download/app-release.apk",
             "latestVersion" to android.defaultConfig.versionName,
             "latestVersionCode" to android.defaultConfig.versionCode,
             "developer" to "github.com/timklge",
-            "description" to "Open-source extension that shows in-ride alerts after a given time interval, distance or HR / power / speed / cadence out of range",
-            "releaseNotes" to "* Add rolling average setting for power triggers"
+            "description" to "Open-source extension that shows in-ride alerts after a given time interval has passed, distance has been traveled or HR / power / speed / cadence range is exceeded",
+            "releaseNotes" to "* Add rolling average setting for power triggers",
+            "screenshotUrls" to listOf(
+                "https://github.com/timklge/karoo-reminder/releases/latest/download/reminder.png",
+                "https://github.com/timklge/karoo-reminder/releases/latest/download/list.png",
+                "https://github.com/timklge/karoo-reminder/releases/latest/download/detail.png",
+            )
         )
 
         val gson = groovy.json.JsonBuilder(manifest).toPrettyString()
