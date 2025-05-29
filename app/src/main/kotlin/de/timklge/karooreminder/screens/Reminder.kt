@@ -151,5 +151,5 @@ fun reminderIsActive(reminder: Reminder, currentRideProfile: RideProfile?): Bool
     val enabledRideProfiles = reminder.enabledRideProfiles.map { it.lowercase().trim() }
     val currentProfileName = currentRideProfile?.name?.lowercase()?.trim()
 
-    return reminder.isActive && (currentRideProfile == null || reminder.enabledRideProfiles.isEmpty() || enabledRideProfiles.contains(currentProfileName))
+    return reminder.isActive && (currentRideProfile == null || enabledRideProfiles.isEmpty() || enabledRideProfiles.contains(currentProfileName))
 }

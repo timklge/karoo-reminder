@@ -20,13 +20,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -64,7 +59,6 @@ import de.timklge.karooreminder.KarooReminderExtension
 import de.timklge.karooreminder.R
 import de.timklge.karooreminder.dataStore
 import de.timklge.karooreminder.streamActiveRideProfile
-import de.timklge.karooreminder.streamRideState
 import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.UserProfile
@@ -73,7 +67,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-
 
 val preferencesKey = stringPreferencesKey("reminders")
 
