@@ -352,7 +352,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Text(profileName)
-                                            Button(onClick = {
+                                            FilledTonalButton(onClick = {
                                                 enabledRideProfiles = enabledRideProfiles.toMutableSet().apply { remove(profileName) }
                                             }) {
                                                 Icon(Icons.Default.Delete, contentDescription = "Delete profile")
@@ -369,7 +369,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true
                             )
-                            Button(
+                            FilledTonalButton(
                                 onClick = {
                                     if (newProfileName.isNotBlank()) {
                                         enabledRideProfiles = enabledRideProfiles.toMutableSet().apply { add(newProfileName) }
@@ -380,10 +380,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             ) {
                                 Text("Add Profile")
                             }
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            Button(
+                            
+                            FilledTonalButton(
                                 onClick = { rideProfileDialogVisible = false },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
