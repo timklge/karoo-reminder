@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -264,9 +266,9 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 if (enabledRideProfiles.isEmpty()) {
-                    Text("All profiles enabled")
+                    Text("Enabled for all profiles")
                 } else {
-                    Text("Enabled profiles:")
+                    Text("Enabled for profiles:")
 
                     enabledRideProfiles.forEach { profileName ->
                         Row(
@@ -292,9 +294,9 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 .height(60.dp), onClick = {
                 rideProfileDialogVisible = true
             }) {
-                Icon(Icons.Default.Build, contentDescription = "Change Ride Profiles", modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Build, contentDescription = "Change Profiles", modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(5.dp))
-                Text("Add Ride Profile")
+                Text("Limit to Profile")
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -356,6 +358,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             .fillMaxWidth()
                             .padding(10.dp),
                         shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(
                             modifier = Modifier
@@ -380,15 +383,19 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                                         rideProfileDialogVisible = false
                                     }
                                 },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth().height(60.dp)
                             ) {
+                                Icon(Icons.Default.Add, contentDescription = "Add Profile")
+                                Spacer(modifier = Modifier.width(5.dp))
                                 Text("Add Profile")
                             }
 
                             FilledTonalButton(
                                 onClick = { rideProfileDialogVisible = false },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth().height(60.dp)
                             ) {
+                                Icon(Icons.Default.Close, contentDescription = "Cancel Editing")
+                                Spacer(modifier = Modifier.width(5.dp))
                                 Text("Close")
                             }
                         }
@@ -403,6 +410,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             .fillMaxWidth()
                             .padding(10.dp),
                         shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(modifier = Modifier
                             .padding(5.dp)
@@ -447,6 +455,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             .fillMaxWidth()
                             .padding(10.dp),
                         shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(modifier = Modifier
                             .padding(5.dp)
@@ -482,6 +491,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             .fillMaxWidth()
                             .padding(10.dp),
                         shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
                         Column(modifier = Modifier
                             .padding(5.dp)
@@ -516,5 +526,4 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
         }
     }
 }
-
 
