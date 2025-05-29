@@ -7,6 +7,7 @@ import de.timklge.karooreminder.screens.Reminder
 import de.timklge.karooreminder.screens.defaultReminders
 import de.timklge.karooreminder.screens.preferencesKey
 import io.hammerhead.karooext.KarooSystemService
+import io.hammerhead.karooext.models.ActiveRideProfile
 import io.hammerhead.karooext.models.OnStreamState
 import io.hammerhead.karooext.models.RideState
 import io.hammerhead.karooext.models.StreamState
@@ -33,6 +34,17 @@ fun KarooSystemService.streamRideState(): Flow<RideState> {
     return callbackFlow {
         val listenerId = addConsumer { rideState: RideState ->
             trySendBlocking(rideState)
+        }
+        awaitClose {
+            removeConsumer(listenerId)
+        }
+    }
+}
+
+fun KarooSystemService.streamActiveRideProfile(): Flow<ActiveRideProfile> {
+    return callbackFlow {
+        val listenerId = addConsumer { activeProfile: ActiveRideProfile ->
+            trySendBlocking(activeProfile)
         }
         awaitClose {
             removeConsumer(listenerId)

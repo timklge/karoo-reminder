@@ -5,8 +5,10 @@ import android.media.MediaPlayer
 import android.util.Log
 import de.timklge.karooreminder.screens.Reminder
 import de.timklge.karooreminder.screens.ReminderBeepPattern
+import de.timklge.karooreminder.screens.reminderIsActive
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.extension.KarooExtension
+import io.hammerhead.karooext.models.ActiveRideProfile
 import io.hammerhead.karooext.models.DataType
 import io.hammerhead.karooext.models.HardwareType
 import io.hammerhead.karooext.models.InRideAlert
@@ -231,13 +233,19 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
         val triggerJobs = mutableSetOf<Job>()
 
+        data class StreamData(val preferences: MutableList<Reminder>, val activeProfile: ActiveRideProfile)
+
+        val streamDataFlow = combine(streamPreferences(), karooSystem.streamActiveRideProfile()) { reminders, activeProfile ->
+            StreamData(preferences = reminders, activeProfile = activeProfile)
+        }
+
         triggerStreamJob = CoroutineScope(Dispatchers.IO).launch {
-            streamPreferences().collect { reminders ->
+            streamDataFlow.collect { (reminders, activeRideProfile) ->
                 triggerJobs.forEach { it.cancel() }
                 triggerJobs.clear()
 
                 if (reminders.any { it.trigger == ReminderTrigger.DISTANCE }){
-                    val distanceJob = startIntervalJob(ReminderTrigger.DISTANCE) {
+                    val distanceJob = startIntervalJob(reminders, activeRideProfile, ReminderTrigger.DISTANCE) {
                         karooSystem.streamDataFlow(DataType.Type.DISTANCE)
                             .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
                             .combine(karooSystem.streamUserProfile()) { distance, profile -> distance to profile }
@@ -255,7 +263,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                 }
 
                 if (reminders.any { it.trigger == ReminderTrigger.ELAPSED_TIME }){
-                    val elapsedTimeJob = startIntervalJob(ReminderTrigger.ELAPSED_TIME) {
+                    val elapsedTimeJob = startIntervalJob(reminders, activeRideProfile, ReminderTrigger.ELAPSED_TIME) {
                         karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)
                             .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
                             .map { (it / 1000 / 60).toInt() }
@@ -266,7 +274,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                 }
 
                 if (reminders.any { it.trigger == ReminderTrigger.ENERGY_OUTPUT }){
-                    val energyOutputJob = startIntervalJob(ReminderTrigger.ENERGY_OUTPUT) {
+                    val energyOutputJob = startIntervalJob(reminders, activeRideProfile, ReminderTrigger.ENERGY_OUTPUT) {
                         karooSystem.streamDataFlow(DataType.Type.ENERGY_OUTPUT)
                             .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue  }
                             .map { it.toInt() }
@@ -301,7 +309,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                 intervalTriggers.forEach { trigger ->
                     SmoothSetting.entries.forEach { smoothSetting ->
                         if (reminders.any { it.trigger == trigger && it.smoothSetting == smoothSetting }){
-                            val job = startRangeExceededJob(trigger, smoothSetting)
+                            val job = startRangeExceededJob(reminders, activeRideProfile, trigger, smoothSetting)
                             triggerJobs.add(job)
                         }
                     }
@@ -310,41 +318,43 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
         }
     }
 
-    private fun startIntervalJob(trigger: ReminderTrigger, flow: () -> Flow<Int>): Job {
+    private fun startIntervalJob(preferences: List<Reminder>, activeRideProfile: ActiveRideProfile, trigger: ReminderTrigger, flow: () -> Flow<Int>): Job {
         return CoroutineScope(Dispatchers.IO).launch {
-            val preferences = streamPreferences()
 
             flow()
                 .filterNot { it == 0 }
-                .combine(preferences) { elapsedMinutes, reminders -> elapsedMinutes to reminders}
-                .distinctUntilChanged { old, new -> old.first == new.first }
-                .collectLatest { (elapsedMinutes, reminders) ->
-                    val rs = reminders
+                .distinctUntilChanged()
+                .collectLatest { elapsedMinutes ->
+                    val rs = preferences
                         .filter { reminder ->
                             val interval = reminder.interval
-                            reminder.trigger == trigger && reminder.isActive && interval != null && elapsedMinutes % interval == 0
+                            reminder.trigger == trigger && reminderIsActive(reminder, activeRideProfile.profile) && interval != null && elapsedMinutes % interval == 0
                         }
 
-                    for (reminder in rs){
+                    for (reminder in rs) {
                         Log.i(TAG, "$trigger reminder: ${reminder.name}")
-                        reminderChannel.send(DisplayedReminder(reminder.tone, trigger, InRideAlert(
-                            id = "reminder-${reminder.id}-${elapsedMinutes}",
-                            detail = reminder.text,
-                            title = reminder.name,
-                            autoDismissMs = if(reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
-                            icon = R.drawable.timer,
-                            textColor = reminder.displayForegroundColor?.getTextColor() ?: R.color.black,
-                            backgroundColor = reminder.displayForegroundColor?.colorRes ?: R.color.hRed
-                        )))
+                        reminderChannel.send(
+                            DisplayedReminder(
+                                reminder.tone, trigger, InRideAlert(
+                                    id = "reminder-${reminder.id}-${elapsedMinutes}",
+                                    detail = reminder.text,
+                                    title = reminder.name,
+                                    autoDismissMs = if (reminder.isAutoDismiss) reminder.autoDismissSeconds * 1000L else null,
+                                    icon = R.drawable.timer,
+                                    textColor = reminder.displayForegroundColor?.getTextColor()
+                                        ?: R.color.black,
+                                    backgroundColor = reminder.displayForegroundColor?.colorRes
+                                        ?: R.color.hRed
+                                )
+                            )
+                        )
                     }
                 }
         }
     }
 
-    private fun startRangeExceededJob(triggerType: ReminderTrigger, smoothSetting: SmoothSetting): Job {
+    private fun startRangeExceededJob(preferences: MutableList<Reminder>, activeRideProfile: ActiveRideProfile, triggerType: ReminderTrigger, smoothSetting: SmoothSetting): Job {
         return CoroutineScope(Dispatchers.IO).launch {
-            val preferences = streamPreferences()
-
             Log.i(TAG, "Starting range exceeded job for trigger $triggerType with smooth setting $smoothSetting")
 
             val valueStream = karooSystem.streamDataFlow(triggerType.getSmoothedDataType(smoothSetting))
@@ -370,9 +380,9 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
             data class StreamData(val value: Double, val reminders: MutableList<Reminder>, val distanceImperial: Boolean, val temperatureImperial: Boolean, val rideState: RideState)
 
-            combine(valueStream, preferences, karooSystem.streamUserProfile(), karooSystem.streamRideState()) { value, reminders, profile, rideState ->
+            combine(valueStream, karooSystem.streamUserProfile(), karooSystem.streamRideState()) { value, profile, rideState ->
                 StreamData(distanceImperial = profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL, temperatureImperial = profile.preferredUnit.temperature == UserProfile.PreferredUnit.UnitType.IMPERIAL,
-                    value = value, reminders = reminders, rideState = rideState)
+                    value = value, reminders = preferences, rideState = rideState)
             }.filter {
                 it.rideState is RideState.Recording
             }.let {
@@ -432,7 +442,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                             ReminderTrigger.ELAPSED_TIME, ReminderTrigger.DISTANCE, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $triggerType")
                         }
 
-                        reminder.isActive && reminder.trigger == triggerType && triggerIsMet
+                        reminderIsActive(reminder, activeRideProfile.profile) && reminder.trigger == triggerType && triggerIsMet
                     }
 
                     triggered

@@ -7,6 +7,7 @@ import de.timklge.karooreminder.R
 import de.timklge.karooreminder.ReminderTrigger
 import de.timklge.karooreminder.SmoothSetting
 import io.hammerhead.karooext.models.PlayBeepPattern
+import io.hammerhead.karooext.models.RideProfile
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -141,6 +142,14 @@ class Reminder(val id: Int, var name: String,
                val isActive: Boolean = true, val isAutoDismiss: Boolean = true,
                val tone: ReminderBeepPattern = ReminderBeepPattern.THREE_TONES_UP,
                var trigger: ReminderTrigger = ReminderTrigger.ELAPSED_TIME,
-               val autoDismissSeconds: Int = 15)
+               val autoDismissSeconds: Int = 15,
+               val enabledRideProfiles: Set<String> = emptySet())
 
 val defaultReminders = Json.encodeToString(listOf(Reminder(0, "Drink", 30, text = "Take a sip!")))
+
+fun reminderIsActive(reminder: Reminder, currentRideProfile: RideProfile?): Boolean {
+    val enabledRideProfiles = reminder.enabledRideProfiles.map { it.lowercase().trim() }
+    val currentProfileName = currentRideProfile?.name?.lowercase()?.trim()
+
+    return reminder.isActive && (currentRideProfile == null || reminder.enabledRideProfiles.isEmpty() || enabledRideProfiles.contains(currentProfileName))
+}

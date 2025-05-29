@@ -103,6 +103,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var selectedTone by remember { mutableStateOf(reminder.tone) }
     var autoDismissSeconds by remember { mutableStateOf(reminder.autoDismissSeconds.toString()) }
     var selectedTrigger by remember { mutableStateOf(reminder.trigger) }
+    var rideProfileDialogVisible by remember { mutableStateOf(false) }
+    var enabledRideProfiles by remember { mutableStateOf(reminder.enabledRideProfiles.toMutableSet()) }
 
     val profile by karooSystem.streamUserProfile().collectAsStateWithLifecycle(null)
 
@@ -116,7 +118,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             isActive = isActive,
             smoothSetting = smoothSetting,
             trigger = selectedTrigger,
-            isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15)
+            isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15,
+            enabledRideProfiles = enabledRideProfiles.toSet())
     }
 
     Column(modifier = Modifier
@@ -267,6 +270,16 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
 
             FilledTonalButton(modifier = Modifier
                 .fillMaxWidth()
+                .height(60.dp), onClick = {
+                rideProfileDialogVisible = true
+            }) {
+                Icon(Icons.Default.Build, contentDescription = "Change Ride Profiles", modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(5.dp))
+                Text("Ride Profiles: ${if (enabledRideProfiles.isEmpty()) "All" else enabledRideProfiles.joinToString(", ")}")
+            }
+
+            FilledTonalButton(modifier = Modifier
+                .fillMaxWidth()
                 .height(50.dp), onClick = {
                 onSubmit(getUpdatedReminder())
             }) {
@@ -308,6 +321,79 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                     }) { Text("Cancel") }
                 },
                 title = { Text("Delete reminder") }, text = { Text("Really delete this reminder?") })
+            }
+
+            if (rideProfileDialogVisible) {
+                var newProfileName by remember { mutableStateOf("") }
+                Dialog(onDismissRequest = { rideProfileDialogVisible = false }) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        shape = RoundedCornerShape(10.dp),
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            if (enabledRideProfiles.isEmpty()) {
+                                Text("All profiles enabled")
+                            } else {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    enabledRideProfiles.forEach { profileName ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(profileName)
+                                            Button(onClick = {
+                                                enabledRideProfiles = enabledRideProfiles.toMutableSet().apply { remove(profileName) }
+                                            }) {
+                                                Icon(Icons.Default.Delete, contentDescription = "Delete profile")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            OutlinedTextField(
+                                value = newProfileName,
+                                onValueChange = { newProfileName = it },
+                                label = { Text("New profile name") },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true
+                            )
+                            Button(
+                                onClick = {
+                                    if (newProfileName.isNotBlank()) {
+                                        enabledRideProfiles = enabledRideProfiles.toMutableSet().apply { add(newProfileName) }
+                                        newProfileName = "" // Clear the text field
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Add Profile")
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Button(
+                                onClick = { rideProfileDialogVisible = false },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Close")
+                            }
+                        }
+                    }
+                }
             }
 
             if (triggerDialogVisible){
@@ -430,3 +516,4 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
         }
     }
 }
+

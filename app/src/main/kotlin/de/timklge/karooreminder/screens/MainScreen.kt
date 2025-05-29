@@ -63,6 +63,8 @@ import androidx.navigation.navArgument
 import de.timklge.karooreminder.KarooReminderExtension
 import de.timklge.karooreminder.R
 import de.timklge.karooreminder.dataStore
+import de.timklge.karooreminder.streamActiveRideProfile
+import de.timklge.karooreminder.streamRideState
 import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.UserProfile
@@ -165,6 +167,7 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
 
     var showWarnings by remember { mutableStateOf(false) }
     val profile by karooSystem.streamUserProfile().collectAsStateWithLifecycle(null)
+    val currentRideProfile by karooSystem.streamActiveRideProfile().collectAsStateWithLifecycle(null)
 
     LaunchedEffect(Unit) {
         delay(1000L)
@@ -197,7 +200,7 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
                         Card(Modifier
                             .fillMaxWidth()
                             .height(60.dp)
-                            .alpha(if (reminder.isActive) 1f else 0.6f)
+                            .alpha(if (reminderIsActive(reminder, currentRideProfile?.profile)) 1f else 0.6f)
                             .clickable { onNavigateToReminder(reminder) }
                             .padding(5.dp), shape = RoundedCornerShape(corner = CornerSize(10.dp))
                         ) {
