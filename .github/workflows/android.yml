@@ -3,10 +3,10 @@ name: Build
 on:
   workflow_dispatch:
   push:
-    branches: [ "master" ]
+    branches: [ "**" ]
     tags: [ "*" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "**" ]
 
 jobs:
   build:
@@ -61,3 +61,4 @@ jobs:
           list.png
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
