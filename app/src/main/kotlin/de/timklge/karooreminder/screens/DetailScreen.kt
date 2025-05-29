@@ -262,10 +262,29 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 )
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Switch(checked = isActive, onCheckedChange = { isActive = it})
-                Spacer(modifier = Modifier.width(10.dp))
-                Text("Is Active")
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (enabledRideProfiles.isEmpty()) {
+                    Text("All profiles enabled")
+                } else {
+                    Text("Enabled profiles:")
+
+                    enabledRideProfiles.forEach { profileName ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(profileName)
+                            FilledTonalButton(onClick = {
+                                enabledRideProfiles = enabledRideProfiles.toMutableSet().apply { remove(profileName) }
+                            }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete profile")
+                            }
+                        }
+                    }
+                }
             }
 
             FilledTonalButton(modifier = Modifier
@@ -275,7 +294,13 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             }) {
                 Icon(Icons.Default.Build, contentDescription = "Change Ride Profiles", modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(5.dp))
-                Text("Ride Profiles: ${if (enabledRideProfiles.isEmpty()) "All" else enabledRideProfiles.joinToString(", ")}")
+                Text("Add Ride Profile")
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(checked = isActive, onCheckedChange = { isActive = it})
+                Spacer(modifier = Modifier.width(10.dp))
+                Text("Is Active")
             }
 
             FilledTonalButton(modifier = Modifier
@@ -339,28 +364,6 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            if (enabledRideProfiles.isEmpty()) {
-                                Text("All profiles enabled")
-                            } else {
-                                Column(modifier = Modifier.fillMaxWidth()) {
-                                    enabledRideProfiles.forEach { profileName ->
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(profileName)
-                                            FilledTonalButton(onClick = {
-                                                enabledRideProfiles = enabledRideProfiles.toMutableSet().apply { remove(profileName) }
-                                            }) {
-                                                Icon(Icons.Default.Delete, contentDescription = "Delete profile")
-                                            }
-                                        }
-                                    }
-                                }
-                            }
 
                             OutlinedTextField(
                                 value = newProfileName,
@@ -373,14 +376,15 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                                 onClick = {
                                     if (newProfileName.isNotBlank()) {
                                         enabledRideProfiles = enabledRideProfiles.toMutableSet().apply { add(newProfileName) }
-                                        newProfileName = "" // Clear the text field
+                                        newProfileName = ""
+                                        rideProfileDialogVisible = false
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text("Add Profile")
                             }
-                            
+
                             FilledTonalButton(
                                 onClick = { rideProfileDialogVisible = false },
                                 modifier = Modifier.fillMaxWidth()
@@ -512,4 +516,5 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
         }
     }
 }
+
 

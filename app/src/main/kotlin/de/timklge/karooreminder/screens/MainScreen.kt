@@ -214,6 +214,14 @@ fun MainScreen(reminders: MutableList<Reminder>, onNavigateToReminder: (r: Remin
                                 val value = if (reminder.trigger.isDecimalValue()) java.text.DecimalFormat("#.##").format(reminder.intervalFloat) else reminder.interval
                                 Text("${reminder.trigger.getPrefix()}${value}${reminder.trigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL)}")
                             }
+                            Row(Modifier.padding(start = 50.dp, end = 5.dp)) { // Assuming the colored surface + spacer is around 50.dp
+                                Text(
+                                    text = "Profiles: ${if (reminder.enabledRideProfiles.isEmpty()) "All" else reminder.enabledRideProfiles.joinToString(", ")}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
 
