@@ -6,6 +6,8 @@
 
 Karoo extension that displays in-ride alerts based on custom triggers. Reminders can be set to activate after a specific time interval, distance traveled, energy output or when a sensor value is outside a defined range (e.g., heart rate exceeds zone 2).
 
+By default, created reminders are active for all ride profiles. If you want to limit reminders to specific ride profiles (e. g. your "Gravel" profile), you can do so in the reminder settings.
+
 Compatible with Karoo 2 and Karoo 3 devices.
 
 ![Reminder List](list.png)

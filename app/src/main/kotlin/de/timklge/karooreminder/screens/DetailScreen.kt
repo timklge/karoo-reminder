@@ -362,8 +362,6 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
-
                             OutlinedTextField(
                                 value = newProfileName,
                                 onValueChange = { newProfileName = it },
