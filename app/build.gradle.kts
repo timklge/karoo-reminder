@@ -73,7 +73,7 @@ tasks.register("generateManifest") {
             "latestVersionCode" to android.defaultConfig.versionCode,
             "developer" to "github.com/timklge",
             "description" to "Open-source extension that shows in-ride alerts after a given time interval has passed, distance has been traveled or HR / power / speed / cadence range is exceeded",
-            "releaseNotes" to "* Add rolling average setting for power triggers",
+            "releaseNotes" to "* Add profile selection dialog per reminder\n* Add rolling average setting for power triggers",
             "screenshotUrls" to listOf(
                 "$baseUrl/reminder.png",
                 "$baseUrl/list.png",
