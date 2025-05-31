@@ -270,19 +270,19 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 } else {
                     Text("Enabled for profiles:")
 
-                    enabledRideProfiles.forEach { profileName ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(profileName)
-                            FilledTonalButton(onClick = {
-                                enabledRideProfiles = enabledRideProfiles.toMutableSet().apply { remove(profileName) }
-                            }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete profile")
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        enabledRideProfiles.forEach { profileName ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(profileName)
+                                FilledTonalButton(onClick = {
+                                    enabledRideProfiles = enabledRideProfiles.toMutableSet().apply { remove(profileName) }
+                                }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete profile")
+                                }
                             }
                         }
                     }
@@ -367,7 +367,6 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-
                             OutlinedTextField(
                                 value = newProfileName,
                                 onValueChange = { newProfileName = it },
