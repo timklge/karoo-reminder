@@ -58,6 +58,10 @@ import androidx.navigation.navArgument
 import de.timklge.karooreminder.KarooReminderExtension
 import de.timklge.karooreminder.R
 import de.timklge.karooreminder.dataStore
+import de.timklge.karooreminder.model.Reminder
+import de.timklge.karooreminder.model.ReminderColor
+import de.timklge.karooreminder.model.defaultReminders
+import de.timklge.karooreminder.model.reminderIsActive
 import de.timklge.karooreminder.streamActiveRideProfile
 import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService

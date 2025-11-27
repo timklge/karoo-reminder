@@ -3,9 +3,11 @@ package de.timklge.karooreminder
 import android.content.Intent
 import android.media.MediaPlayer
 import android.util.Log
-import de.timklge.karooreminder.screens.Reminder
-import de.timklge.karooreminder.screens.ReminderBeepPattern
-import de.timklge.karooreminder.screens.reminderIsActive
+import de.timklge.karooreminder.model.Reminder
+import de.timklge.karooreminder.model.ReminderBeepPattern
+import de.timklge.karooreminder.model.ReminderTrigger
+import de.timklge.karooreminder.model.SmoothSetting
+import de.timklge.karooreminder.model.reminderIsActive
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.extension.KarooExtension
 import io.hammerhead.karooext.models.ActiveRideProfile
@@ -31,136 +33,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
-
-enum class SmoothSetting(val label: String) {
-    NONE("None"),
-    SMOOTH_3S("3 seconds"),
-    SMOOTH_10S("10 seconds"),
-    SMOOTH_30S("30 seconds"),
-    SMOOTH_20M("20 minutes"),
-    SMOOTH_60M("60 minutes"),
-    SMOOTH_LAP("Lap"),
-    SMOOTH_RIDE("Ride");
-}
-
-enum class ReminderTrigger(val id: String, val label: String) {
-    ELAPSED_TIME("elapsed_time", "Elapsed Time"),
-    DISTANCE("distance", "Distance"),
-    ENERGY_OUTPUT("energy_output", "Energy Output"),
-    HR_LIMIT_MAXIMUM_EXCEEDED("hr_limit_max", "HR above value"),
-    HR_LIMIT_MINIMUM_EXCEEDED("hr_limit_min", "HR below value"),
-    POWER_LIMIT_MAXIMUM_EXCEEDED("power_limit_min", "Power above value"),
-    POWER_LIMIT_MINIMUM_EXCEEDED("power_limit_min", "Power below value"),
-    SPEED_LIMIT_MAXIMUM_EXCEEDED("speed_limit_max", "Speed above value"),
-    SPEED_LIMIT_MINIMUM_EXCEEDED("speed_limit_min", "Speed below value"),
-    CADENCE_LIMIT_MAXIMUM_EXCEEDED("cadence_limit_max", "Cadence above value"),
-    CADENCE_LIMIT_MINIMUM_EXCEEDED("cadence_limit_min", "Cadence below value"),
-    AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED("ambient_temperature_limit_max", "Ambient temperature above value"),
-    AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED("ambient_temperature_limit_min", "Ambient temperature below value"),
-    GRADIENT_LIMIT_MAXIMUM_EXCEEDED("gradient_limit_max", "Gradient above value"),
-    GRADIENT_LIMIT_MINIMUM_EXCEEDED("gradient_limit_min", "Gradient below value"),
-    CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED("core_temperature_limit_max", "Core temperature above value"),
-    CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED("core_temperature_limit_min", "Core temperature below value"),
-    FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED("front_tire_pressure_limit_max", "Front tire pressure above value"),
-    FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED("front_tire_pressure_limit_min", "Front tire pressure below value"),
-    REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED("rear_tire_pressure_limit_max", "Rear tire pressure above value"),
-    REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED("rear_tire_pressure_limit_min", "Rear tire pressure below value");
-
-    fun getPrefix(): String {
-        return when (this) {
-            HR_LIMIT_MINIMUM_EXCEEDED, POWER_LIMIT_MINIMUM_EXCEEDED, SPEED_LIMIT_MINIMUM_EXCEEDED, CADENCE_LIMIT_MINIMUM_EXCEEDED, CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED,
-            AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, GRADIENT_LIMIT_MINIMUM_EXCEEDED -> "<"
-
-            HR_LIMIT_MAXIMUM_EXCEEDED, POWER_LIMIT_MAXIMUM_EXCEEDED, SPEED_LIMIT_MAXIMUM_EXCEEDED, CADENCE_LIMIT_MAXIMUM_EXCEEDED, CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED,
-            AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, GRADIENT_LIMIT_MAXIMUM_EXCEEDED -> ">"
-
-            ELAPSED_TIME, DISTANCE, ENERGY_OUTPUT -> ""
-        }
-    }
-
-    fun getSuffix(imperial: Boolean): String {
-        return when (this) {
-            ELAPSED_TIME -> "min"
-            DISTANCE -> if(imperial) "mi" else "km"
-            HR_LIMIT_MAXIMUM_EXCEEDED, HR_LIMIT_MINIMUM_EXCEEDED -> "bpm"
-            POWER_LIMIT_MAXIMUM_EXCEEDED, POWER_LIMIT_MINIMUM_EXCEEDED -> "W"
-            SPEED_LIMIT_MAXIMUM_EXCEEDED, SPEED_LIMIT_MINIMUM_EXCEEDED -> if(imperial) "mph" else "km/h"
-            CADENCE_LIMIT_MAXIMUM_EXCEEDED, CADENCE_LIMIT_MINIMUM_EXCEEDED -> "rpm"
-            CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED, AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED -> if(imperial) "°F" else "°C"
-            FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> if(imperial) "psi" else "bar"
-            ENERGY_OUTPUT -> "kJ"
-            GRADIENT_LIMIT_MAXIMUM_EXCEEDED, GRADIENT_LIMIT_MINIMUM_EXCEEDED -> "%"
-        }
-    }
-
-    fun isDecimalValue() = this == CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED || this == CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED ||
-            this == FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED || this == FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED ||
-            this == REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED || this == REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED ||
-            this == AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED || this == AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED ||
-            this == GRADIENT_LIMIT_MAXIMUM_EXCEEDED || this == GRADIENT_LIMIT_MINIMUM_EXCEEDED
-
-    fun getSmoothedDataType(smoothSetting: SmoothSetting): String {
-        return when(this) {
-            POWER_LIMIT_MAXIMUM_EXCEEDED, POWER_LIMIT_MINIMUM_EXCEEDED -> {
-                when (smoothSetting) {
-                    SmoothSetting.NONE -> DataType.Type.POWER
-                    SmoothSetting.SMOOTH_3S -> DataType.Type.SMOOTHED_3S_AVERAGE_POWER
-                    SmoothSetting.SMOOTH_10S -> DataType.Type.SMOOTHED_10S_AVERAGE_POWER
-                    SmoothSetting.SMOOTH_30S -> DataType.Type.SMOOTHED_30S_AVERAGE_POWER
-                    SmoothSetting.SMOOTH_20M -> DataType.Type.SMOOTHED_20M_AVERAGE_POWER
-                    SmoothSetting.SMOOTH_60M -> DataType.Type.SMOOTHED_1HR_AVERAGE_POWER
-                    SmoothSetting.SMOOTH_LAP -> DataType.Type.POWER_LAP
-                    SmoothSetting.SMOOTH_RIDE -> DataType.Type.AVERAGE_POWER
-                }
-            }
-
-            else -> getDataType()
-        }
-    }
-
-    fun hasSmoothedDataTypes(): Boolean {
-        return this == POWER_LIMIT_MAXIMUM_EXCEEDED || this == POWER_LIMIT_MINIMUM_EXCEEDED
-    }
-
-    fun getDataType(): String {
-        return when (this) {
-            ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.HEART_RATE
-            POWER_LIMIT_MAXIMUM_EXCEEDED, POWER_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.SMOOTHED_3S_AVERAGE_POWER
-            ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.SMOOTHED_3S_AVERAGE_SPEED
-            ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.SMOOTHED_3S_AVERAGE_CADENCE
-            ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.CORE_TEMP
-            ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TIRE_PRESSURE_FRONT
-            ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TIRE_PRESSURE_REAR
-            ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.ELEVATION_GRADE
-            ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED, ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> DataType.Type.TEMPERATURE
-
-            ReminderTrigger.DISTANCE, ReminderTrigger.ELAPSED_TIME, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $this")
-        }
-    }
-}
-
-fun Flow<Int>.allIntermediateInts(): Flow<Int> = flow {
-    var lastValue: Int? = null
-
-    collect { value ->
-        if (lastValue != null){
-            val start = (lastValue!! + 1).coerceAtMost(value)
-
-            for (i in start..value) {
-                emit(i)
-            }
-        } else {
-            emit(value)
-        }
-
-        lastValue = value
-    }
-}
 
 class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERSION_NAME) {
     companion object {

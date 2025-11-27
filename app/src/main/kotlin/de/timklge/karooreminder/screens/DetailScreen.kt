@@ -63,8 +63,11 @@ import com.maxkeppeler.sheets.color.models.ColorSelectionMode
 import com.maxkeppeler.sheets.color.models.MultipleColors
 import com.maxkeppeler.sheets.color.models.SingleColor
 import de.timklge.karooreminder.R
-import de.timklge.karooreminder.ReminderTrigger
-import de.timklge.karooreminder.SmoothSetting
+import de.timklge.karooreminder.model.ReminderTrigger
+import de.timklge.karooreminder.model.SmoothSetting
+import de.timklge.karooreminder.model.Reminder
+import de.timklge.karooreminder.model.ReminderBeepPattern
+import de.timklge.karooreminder.model.ReminderColor
 import de.timklge.karooreminder.streamUserProfile
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.HardwareType
@@ -113,15 +116,21 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     fun getUpdatedReminder(): Reminder {
         val durationString = duration.replace(",", ".")
 
-        return Reminder(reminder.id, title, interval = durationString.toDoubleOrNull()?.toInt() ?: 1,
+        return Reminder(
+            reminder.id,
+            title,
+            interval = durationString.toDoubleOrNull()?.toInt() ?: 1,
             intervalFloat = if (selectedTrigger.isDecimalValue()) durationString.toDoubleOrNull() else null,
             text = text,
             displayForegroundColor = selectedColor,
             isActive = isActive,
             smoothSetting = smoothSetting,
             trigger = selectedTrigger,
-            isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15,
-            enabledRideProfiles = enabledRideProfiles.toSet())
+            isAutoDismiss = autoDismiss,
+            tone = selectedTone,
+            autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15,
+            enabledRideProfiles = enabledRideProfiles.toSet()
+        )
     }
 
     Column(modifier = Modifier
@@ -147,33 +156,11 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 Text("Trigger: ${selectedTrigger.label}")
             }
 
-            OutlinedTextField(value = duration, modifier = Modifier.fillMaxWidth(),
+            OutlinedTextField(
+                value = duration,
+                modifier = Modifier.fillMaxWidth(),
                 onValueChange = { duration = it },
-                label = {
-                    when(selectedTrigger){
-                        ReminderTrigger.ELAPSED_TIME ->  Text("Interval")
-                        ReminderTrigger.DISTANCE -> Text("Distance")
-                        ReminderTrigger.HR_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum heart rate")
-                        ReminderTrigger.POWER_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum power")
-                        ReminderTrigger.HR_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum heart rate")
-                        ReminderTrigger.POWER_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum power")
-                        ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum speed")
-                        ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum speed")
-                        ReminderTrigger.CADENCE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum cadence")
-                        ReminderTrigger.CADENCE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum cadence")
-                        ReminderTrigger.ENERGY_OUTPUT -> Text("Energy Output")
-                        ReminderTrigger.CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum core temp")
-                        ReminderTrigger.CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum core temp")
-                        ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED -> Text("Max front tire pressure")
-                        ReminderTrigger.FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> Text("Min front tire pressure")
-                        ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED -> Text("Max rear tire pressure")
-                        ReminderTrigger.REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED -> Text("Min rear tire pressure")
-                        ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum temp")
-                        ReminderTrigger.AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum temp")
-                        ReminderTrigger.GRADIENT_LIMIT_MAXIMUM_EXCEEDED -> Text("Maximum gradient")
-                        ReminderTrigger.GRADIENT_LIMIT_MINIMUM_EXCEEDED -> Text("Minimum gradient")
-                    }
-                },
+                label = { Text(selectedTrigger.getFieldLabel()) },
                 suffix = {
                     Text(selectedTrigger.getSuffix(profile?.preferredUnit?.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL))
                 },

@@ -3,8 +3,8 @@ package de.timklge.karooreminder
 import android.content.Context
 import android.util.Log
 import de.timklge.karooreminder.KarooReminderExtension.Companion.TAG
-import de.timklge.karooreminder.screens.Reminder
-import de.timklge.karooreminder.screens.defaultReminders
+import de.timklge.karooreminder.model.Reminder
+import de.timklge.karooreminder.model.defaultReminders
 import de.timklge.karooreminder.screens.preferencesKey
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.ActiveRideProfile
@@ -16,6 +16,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 
@@ -73,5 +74,23 @@ fun Context.streamPreferences(): Flow<MutableList<Reminder>> {
             Log.e(TAG,"Failed to read preferences", e)
             mutableListOf()
         }
+    }
+}
+
+fun Flow<Int>.allIntermediateInts(): Flow<Int> = flow {
+    var lastValue: Int? = null
+
+    collect { value ->
+        if (lastValue != null){
+            val start = (lastValue!! + 1).coerceAtMost(value)
+
+            for (i in start..value) {
+                emit(i)
+            }
+        } else {
+            emit(value)
+        }
+
+        lastValue = value
     }
 }
