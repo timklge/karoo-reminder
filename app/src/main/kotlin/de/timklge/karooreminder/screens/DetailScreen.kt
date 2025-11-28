@@ -110,6 +110,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var selectedTrigger by remember { mutableStateOf(reminder.trigger) }
     var rideProfileDialogVisible by remember { mutableStateOf(false) }
     var enabledRideProfiles by remember { mutableStateOf(reminder.enabledRideProfiles.toMutableSet()) }
+    var oneShot by remember { mutableStateOf(reminder.oneShot) }
 
     val profile by karooSystem.streamUserProfile().collectAsStateWithLifecycle(null)
 
@@ -129,7 +130,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             isAutoDismiss = autoDismiss,
             tone = selectedTone,
             autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15,
-            enabledRideProfiles = enabledRideProfiles.toSet()
+            enabledRideProfiles = enabledRideProfiles.toSet(),
+            oneShot = oneShot
         )
     }
 
@@ -290,6 +292,14 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 Switch(checked = isActive, onCheckedChange = { isActive = it})
                 Spacer(modifier = Modifier.width(10.dp))
                 Text("Is Active")
+            }
+
+            if (selectedTrigger.isIntervalJob()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(checked = oneShot, onCheckedChange = { oneShot = it })
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text("One Shot")
+                }
             }
 
             FilledTonalButton(modifier = Modifier

@@ -23,7 +23,9 @@ class Reminder(val id: Int, var name: String,
                val autoDismissSeconds: Int = 15,
                val enabledRideProfiles: Set<String> = emptySet(),
                @Serializable(with = ReminderTriggerSerializer::class)
-               val trigger: ReminderTrigger = ReminderTrigger.ELAPSED_TIME)
+               val trigger: ReminderTrigger = ReminderTrigger.ELAPSED_TIME,
+               val oneShot: Boolean = false
+)
 
 val defaultReminders = Json.encodeToString(listOf(Reminder(0, "Drink", 30, text = "Take a sip!")))
 

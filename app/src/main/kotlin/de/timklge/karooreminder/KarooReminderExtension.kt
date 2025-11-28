@@ -204,7 +204,15 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                     val rs = preferences
                         .filter { reminder ->
                             val interval = reminder.interval
-                            reminder.trigger == trigger && reminderIsActive(reminder, activeRideProfile.profile) && interval != null && elapsedMinutes % interval == 0
+
+                            val intervalMet = interval?.let {
+                                if (reminder.oneShot) {
+                                    elapsedMinutes % interval == 0
+                                } else {
+                                    elapsedMinutes == interval
+                                }
+                            }
+                            reminder.trigger == trigger && reminderIsActive(reminder, activeRideProfile.profile) && intervalMet == true
                         }
 
                     for (reminder in rs) {

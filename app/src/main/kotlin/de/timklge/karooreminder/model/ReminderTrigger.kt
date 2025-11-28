@@ -8,6 +8,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
     abstract fun hasSmoothedDataTypes(): Boolean
     abstract fun getSmoothedDataType(smoothSetting: SmoothSetting): String
     abstract fun getDataType(): String
+    abstract fun isIntervalJob(): Boolean
     abstract fun getFieldLabel(): String
     // Interval-based triggers
     data object ELAPSED_TIME : ReminderTrigger("elapsed_time", "Elapsed Time") {
@@ -17,6 +18,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun hasSmoothedDataTypes() = false
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = error("Unsupported trigger type: $this")
+        override fun isIntervalJob(): Boolean = true
         override fun getFieldLabel() = "Interval"
     }
     data object DISTANCE : ReminderTrigger("distance", "Distance") {
@@ -27,6 +29,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = error("Unsupported trigger type: $this")
         override fun getFieldLabel() = "Distance"
+        override fun isIntervalJob(): Boolean = true
     }
     data object ENERGY_OUTPUT : ReminderTrigger("energy_output", "Energy Output") {
         override fun getPrefix() = ""
@@ -36,6 +39,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = error("Unsupported trigger type: $this")
         override fun getFieldLabel() = "Energy Output"
+        override fun isIntervalJob(): Boolean = true
     }
     // Heart rate triggers
     data object HR_LIMIT_MAXIMUM_EXCEEDED : ReminderTrigger("hr_limit_max", "HR above value") {
@@ -46,6 +50,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.HEART_RATE
         override fun getFieldLabel() = "Maximum heart rate"
+        override fun isIntervalJob(): Boolean = false
     }
     data object HR_LIMIT_MINIMUM_EXCEEDED : ReminderTrigger("hr_limit_min", "HR below value") {
         override fun getPrefix() = "<"
@@ -55,6 +60,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.HEART_RATE
         override fun getFieldLabel() = "Minimum heart rate"
+        override fun isIntervalJob(): Boolean = false
     }
     // Power triggers
     data object POWER_LIMIT_MAXIMUM_EXCEEDED : ReminderTrigger("power_limit_max", "Power above value") {
@@ -74,6 +80,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         }
         override fun getDataType() = DataType.Type.SMOOTHED_3S_AVERAGE_POWER
         override fun getFieldLabel() = "Maximum power"
+        override fun isIntervalJob(): Boolean = false
     }
     data object POWER_LIMIT_MINIMUM_EXCEEDED : ReminderTrigger("power_limit_min", "Power below value") {
         override fun getPrefix() = "<"
@@ -92,6 +99,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         }
         override fun getDataType() = DataType.Type.SMOOTHED_3S_AVERAGE_POWER
         override fun getFieldLabel() = "Minimum power"
+        override fun isIntervalJob(): Boolean = false
     }
     // Speed triggers
     data object SPEED_LIMIT_MAXIMUM_EXCEEDED : ReminderTrigger("speed_limit_max", "Speed above value") {
@@ -102,6 +110,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.SMOOTHED_3S_AVERAGE_SPEED
         override fun getFieldLabel() = "Maximum speed"
+        override fun isIntervalJob(): Boolean = false
     }
     data object SPEED_LIMIT_MINIMUM_EXCEEDED : ReminderTrigger("speed_limit_min", "Speed below value") {
         override fun getPrefix() = "<"
@@ -111,6 +120,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.SMOOTHED_3S_AVERAGE_SPEED
         override fun getFieldLabel() = "Minimum speed"
+        override fun isIntervalJob(): Boolean = false
     }
     // Cadence triggers
     data object CADENCE_LIMIT_MAXIMUM_EXCEEDED : ReminderTrigger("cadence_limit_max", "Cadence above value") {
@@ -121,6 +131,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.SMOOTHED_3S_AVERAGE_CADENCE
         override fun getFieldLabel() = "Maximum cadence"
+        override fun isIntervalJob(): Boolean = false
     }
     data object CADENCE_LIMIT_MINIMUM_EXCEEDED : ReminderTrigger("cadence_limit_min", "Cadence below value") {
         override fun getPrefix() = "<"
@@ -130,6 +141,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.SMOOTHED_3S_AVERAGE_CADENCE
         override fun getFieldLabel() = "Minimum cadence"
+        override fun isIntervalJob(): Boolean = false
     }
     // Ambient temperature triggers
     data object AMBIENT_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED : ReminderTrigger("ambient_temperature_limit_max", "Ambient temperature above value") {
@@ -140,6 +152,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.TEMPERATURE
         override fun getFieldLabel() = "Maximum temp"
+        override fun isIntervalJob(): Boolean = false
     }
     data object AMBIENT_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED : ReminderTrigger("ambient_temperature_limit_min", "Ambient temperature below value") {
         override fun getPrefix() = "<"
@@ -149,6 +162,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.TEMPERATURE
         override fun getFieldLabel() = "Minimum temp"
+        override fun isIntervalJob(): Boolean = false
     }
     // Gradient triggers
     data object GRADIENT_LIMIT_MAXIMUM_EXCEEDED : ReminderTrigger("gradient_limit_max", "Gradient above value") {
@@ -159,6 +173,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.ELEVATION_GRADE
         override fun getFieldLabel() = "Maximum gradient"
+        override fun isIntervalJob(): Boolean = false
     }
     data object GRADIENT_LIMIT_MINIMUM_EXCEEDED : ReminderTrigger("gradient_limit_min", "Gradient below value") {
         override fun getPrefix() = "<"
@@ -168,6 +183,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.ELEVATION_GRADE
         override fun getFieldLabel() = "Minimum gradient"
+        override fun isIntervalJob(): Boolean = false
     }
     // Core temperature triggers
     data object CORE_TEMPERATURE_LIMIT_MAXIMUM_EXCEEDED : ReminderTrigger("core_temperature_limit_max", "Core temperature above value") {
@@ -178,6 +194,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.CORE_TEMP
         override fun getFieldLabel() = "Maximum core temp"
+        override fun isIntervalJob(): Boolean = false
     }
     data object CORE_TEMPERATURE_LIMIT_MINIMUM_EXCEEDED : ReminderTrigger("core_temperature_limit_min", "Core temperature below value") {
         override fun getPrefix() = "<"
@@ -187,6 +204,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.CORE_TEMP
         override fun getFieldLabel() = "Minimum core temp"
+        override fun isIntervalJob(): Boolean = false
     }
     // Front tire pressure triggers
     data object FRONT_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED : ReminderTrigger("front_tire_pressure_limit_max", "Front tire pressure above value") {
@@ -197,6 +215,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.TIRE_PRESSURE_FRONT
         override fun getFieldLabel() = "Max front tire pressure"
+        override fun isIntervalJob(): Boolean = false
     }
     data object FRONT_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED : ReminderTrigger("front_tire_pressure_limit_min", "Front tire pressure below value") {
         override fun getPrefix() = "<"
@@ -206,6 +225,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.TIRE_PRESSURE_FRONT
         override fun getFieldLabel() = "Min front tire pressure"
+        override fun isIntervalJob(): Boolean = false
     }
     // Rear tire pressure triggers
     data object REAR_TIRE_PRESSURE_LIMIT_MAXIMUM_EXCEEDED : ReminderTrigger("rear_tire_pressure_limit_max", "Rear tire pressure above value") {
@@ -216,6 +236,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.TIRE_PRESSURE_REAR
         override fun getFieldLabel() = "Max rear tire pressure"
+        override fun isIntervalJob(): Boolean = false
     }
     data object REAR_TIRE_PRESSURE_LIMIT_MINIMUM_EXCEEDED : ReminderTrigger("rear_tire_pressure_limit_min", "Rear tire pressure below value") {
         override fun getPrefix() = "<"
@@ -225,6 +246,7 @@ sealed class ReminderTrigger(val id: String, val label: String) {
         override fun getSmoothedDataType(smoothSetting: SmoothSetting) = getDataType()
         override fun getDataType() = DataType.Type.TIRE_PRESSURE_REAR
         override fun getFieldLabel() = "Min rear tire pressure"
+        override fun isIntervalJob(): Boolean = false
     }
     companion object {
         val entries = listOf(
