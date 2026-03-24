@@ -78,7 +78,8 @@ tasks.register("generateManifest") {
                 "$baseUrl/reminder.png",
                 "$baseUrl/list.png",
                 "$baseUrl/detail.png",
-            )
+            ),
+            "tags" to listOf("performance")
         )
 
         val gson = groovy.json.JsonBuilder(manifest).toPrettyString()

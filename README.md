@@ -6,6 +6,9 @@
 
 Karoo extension that displays in-ride alerts based on custom triggers. Reminders can be set to activate after a specific time interval, distance traveled, energy output or when a sensor value is outside a defined range (e.g., heart rate exceeds zone 2).
 
+> [!NOTE]
+> In 2026, Hammerhead added native custom alerts to the Karoo, so this extension is mostly obsolete. More information available in the [Hammerhead Documentation](https://support.hammerhead.io/hc/en-us/articles/44288796614299-Karoo-OS-Custom-Alerts).
+
 Note that interval and distance reminders repeat at the specified intervals or distances, eg. every 10 minutes, or every 10 miles/kilometers, for example.
 
 By default, created reminders are active for all ride profiles. If you want to limit reminders to specific ride profiles (e. g. your "Gravel" profile), you can do so in the reminder settings.
