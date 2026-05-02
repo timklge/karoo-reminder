@@ -107,6 +107,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var selectedTrigger by remember { mutableStateOf(reminder.trigger) }
     var rideProfileDialogVisible by remember { mutableStateOf(false) }
     var enabledRideProfiles by remember { mutableStateOf(reminder.enabledRideProfiles.toMutableSet()) }
+    var minElapsedTimeEnabled by remember { mutableStateOf(reminder.minElapsedTimeMinutes > 0) }
+    var minElapsedTimeMinutes by remember { mutableStateOf(if (reminder.minElapsedTimeMinutes > 0) reminder.minElapsedTimeMinutes.toString() else "10") }
 
     val profile by karooSystem.streamUserProfile().collectAsStateWithLifecycle(null)
 
@@ -121,7 +123,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             smoothSetting = smoothSetting,
             trigger = selectedTrigger,
             isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15,
-            enabledRideProfiles = enabledRideProfiles.toSet())
+            enabledRideProfiles = enabledRideProfiles.toSet(),
+            minElapsedTimeMinutes = if (minElapsedTimeEnabled) (minElapsedTimeMinutes.toIntOrNull() ?: 0) else 0)
     }
 
     Column(modifier = Modifier
@@ -259,6 +262,24 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                     onValueChange = { autoDismissSeconds = it },
                     label = { Text("Display duration") },
                     suffix = { Text("s") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(checked = minElapsedTimeEnabled, onCheckedChange = { minElapsedTimeEnabled = it })
+                Spacer(modifier = Modifier.width(10.dp))
+                Text("Delay first alert")
+            }
+
+            if (minElapsedTimeEnabled) {
+                OutlinedTextField(
+                    value = minElapsedTimeMinutes,
+                    modifier = Modifier.fillMaxWidth(),
+                    onValueChange = { minElapsedTimeMinutes = it },
+                    label = { Text("Minimum elapsed time") },
+                    suffix = { Text("min") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )

@@ -143,7 +143,9 @@ class Reminder(val id: Int, var name: String,
                val tone: ReminderBeepPattern = ReminderBeepPattern.THREE_TONES_UP,
                var trigger: ReminderTrigger = ReminderTrigger.ELAPSED_TIME,
                val autoDismissSeconds: Int = 15,
-               val enabledRideProfiles: Set<String> = emptySet())
+               val enabledRideProfiles: Set<String> = emptySet(),
+               /** Minimum elapsed ride time in minutes before the first alert fires. 0 = no minimum. */
+               val minElapsedTimeMinutes: Int = 0)
 
 val defaultReminders = Json.encodeToString(listOf(Reminder(0, "Drink", 30, text = "Take a sip!")))
 

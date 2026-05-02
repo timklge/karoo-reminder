@@ -320,6 +320,13 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
     private fun startIntervalJob(preferences: List<Reminder>, activeRideProfile: ActiveRideProfile, trigger: ReminderTrigger, flow: () -> Flow<Int>): Job {
         return CoroutineScope(Dispatchers.IO).launch {
+            var currentElapsedMinutes = 0
+            launch {
+                karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)
+                    .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue }
+                    .map { (it / 1000 / 60).toInt() }
+                    .collect { currentElapsedMinutes = it }
+            }
 
             flow()
                 .filterNot { it == 0 }
@@ -328,7 +335,9 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                     val rs = preferences
                         .filter { reminder ->
                             val interval = reminder.interval
+                            val elapsedForCheck = if (trigger == ReminderTrigger.ELAPSED_TIME) elapsedMinutes else currentElapsedMinutes
                             reminder.trigger == trigger && reminderIsActive(reminder, activeRideProfile.profile) && interval != null && elapsedMinutes % interval == 0
+                                && (reminder.minElapsedTimeMinutes == 0 || elapsedForCheck >= reminder.minElapsedTimeMinutes)
                         }
 
                     for (reminder in rs) {
@@ -378,11 +387,15 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                 }
                 .filter { it != 0.0 }
 
-            data class StreamData(val value: Double, val reminders: MutableList<Reminder>, val distanceImperial: Boolean, val temperatureImperial: Boolean, val rideState: RideState)
+            data class StreamData(val value: Double, val reminders: MutableList<Reminder>, val distanceImperial: Boolean, val temperatureImperial: Boolean, val rideState: RideState, val elapsedMinutes: Int)
 
-            combine(valueStream, karooSystem.streamUserProfile(), karooSystem.streamRideState()) { value, profile, rideState ->
+            val elapsedTimeFlow = karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)
+                .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue }
+                .map { (it / 1000 / 60).toInt() }
+
+            combine(valueStream, karooSystem.streamUserProfile(), karooSystem.streamRideState(), elapsedTimeFlow) { value, profile, rideState, elapsedMin ->
                 StreamData(distanceImperial = profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL, temperatureImperial = profile.preferredUnit.temperature == UserProfile.PreferredUnit.UnitType.IMPERIAL,
-                    value = value, reminders = preferences, rideState = rideState)
+                    value = value, reminders = preferences, rideState = rideState, elapsedMinutes = elapsedMin)
             }.filter {
                 it.rideState is RideState.Recording
             }.let {
@@ -403,7 +416,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                         ReminderTrigger.ELAPSED_TIME, ReminderTrigger.DISTANCE, ReminderTrigger.ENERGY_OUTPUT -> error("Unsupported trigger type: $triggerType")
                     }
                 }
-                .map { (actualValue, reminders, distanceImperial, temperatureImperial) ->
+                .map { (actualValue, reminders, distanceImperial, temperatureImperial, _, elapsedMinutes) ->
                     val triggered = reminders.filter { reminder ->
                         val triggerThreshold = when(triggerType) {
                             ReminderTrigger.SPEED_LIMIT_MINIMUM_EXCEEDED, ReminderTrigger.SPEED_LIMIT_MAXIMUM_EXCEEDED -> {
@@ -443,6 +456,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                         }
 
                         reminderIsActive(reminder, activeRideProfile.profile) && reminder.trigger == triggerType && triggerIsMet
+                            && (reminder.minElapsedTimeMinutes == 0 || elapsedMinutes >= reminder.minElapsedTimeMinutes)
                     }
 
                     triggered
