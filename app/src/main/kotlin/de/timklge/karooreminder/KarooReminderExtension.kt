@@ -320,12 +320,13 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
     private fun startIntervalJob(preferences: List<Reminder>, activeRideProfile: ActiveRideProfile, trigger: ReminderTrigger, flow: () -> Flow<Int>): Job {
         return CoroutineScope(Dispatchers.IO).launch {
-            var currentElapsedMinutes = 0
+            val currentElapsedMinutes = java.util.concurrent.atomic.AtomicInteger(0)
             launch {
                 karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)
                     .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue }
                     .map { (it / 1000 / 60).toInt() }
-                    .collect { currentElapsedMinutes = it }
+                    .distinctUntilChanged()
+                    .collect { currentElapsedMinutes.set(it) }
             }
 
             flow()
@@ -335,7 +336,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                     val rs = preferences
                         .filter { reminder ->
                             val interval = reminder.interval
-                            val elapsedForCheck = if (trigger == ReminderTrigger.ELAPSED_TIME) elapsedMinutes else currentElapsedMinutes
+                            val elapsedForCheck = if (trigger == ReminderTrigger.ELAPSED_TIME) elapsedMinutes else currentElapsedMinutes.get()
                             reminder.trigger == trigger && reminderIsActive(reminder, activeRideProfile.profile) && interval != null && elapsedMinutes % interval == 0
                                 && (reminder.minElapsedTimeMinutes == 0 || elapsedForCheck >= reminder.minElapsedTimeMinutes)
                         }
@@ -392,6 +393,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
             val elapsedTimeFlow = karooSystem.streamDataFlow(DataType.Type.ELAPSED_TIME)
                 .mapNotNull { (it as? StreamState.Streaming)?.dataPoint?.singleValue }
                 .map { (it / 1000 / 60).toInt() }
+                .distinctUntilChanged()
 
             combine(valueStream, karooSystem.streamUserProfile(), karooSystem.streamRideState(), elapsedTimeFlow) { value, profile, rideState, elapsedMin ->
                 StreamData(distanceImperial = profile.preferredUnit.distance == UserProfile.PreferredUnit.UnitType.IMPERIAL, temperatureImperial = profile.preferredUnit.temperature == UserProfile.PreferredUnit.UnitType.IMPERIAL,

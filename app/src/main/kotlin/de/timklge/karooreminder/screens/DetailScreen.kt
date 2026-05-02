@@ -109,6 +109,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var enabledRideProfiles by remember { mutableStateOf(reminder.enabledRideProfiles.toMutableSet()) }
     var minElapsedTimeEnabled by remember { mutableStateOf(reminder.minElapsedTimeMinutes > 0) }
     var minElapsedTimeMinutes by remember { mutableStateOf(if (reminder.minElapsedTimeMinutes > 0) reminder.minElapsedTimeMinutes.toString() else "10") }
+    val minElapsedTimeError = minElapsedTimeEnabled && (minElapsedTimeMinutes.toIntOrNull() == null || (minElapsedTimeMinutes.toIntOrNull() ?: -1) < 0)
 
     val profile by karooSystem.streamUserProfile().collectAsStateWithLifecycle(null)
 
@@ -124,7 +125,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             trigger = selectedTrigger,
             isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15,
             enabledRideProfiles = enabledRideProfiles.toSet(),
-            minElapsedTimeMinutes = if (minElapsedTimeEnabled) (minElapsedTimeMinutes.toIntOrNull() ?: 0) else 0)
+            minElapsedTimeMinutes = if (minElapsedTimeEnabled) maxOf(0, minElapsedTimeMinutes.toIntOrNull() ?: 0) else 0)
     }
 
     Column(modifier = Modifier
@@ -280,6 +281,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                     onValueChange = { minElapsedTimeMinutes = it },
                     label = { Text("Minimum elapsed time") },
                     suffix = { Text("min") },
+                    isError = minElapsedTimeError,
+                    supportingText = if (minElapsedTimeError) {{ Text("Enter a positive number") }} else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
@@ -328,7 +331,9 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
 
             FilledTonalButton(modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp), onClick = {
+                .height(50.dp),
+                enabled = !minElapsedTimeError,
+                onClick = {
                 onSubmit(getUpdatedReminder())
             }) {
                 Icon(Icons.Default.Done, contentDescription = "Save Reminder")
