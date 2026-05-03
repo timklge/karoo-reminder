@@ -107,6 +107,9 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var selectedTrigger by remember { mutableStateOf(reminder.trigger) }
     var rideProfileDialogVisible by remember { mutableStateOf(false) }
     var enabledRideProfiles by remember { mutableStateOf(reminder.enabledRideProfiles.toMutableSet()) }
+    var minElapsedTimeEnabled by remember { mutableStateOf(reminder.minElapsedTimeMinutes > 0) }
+    var minElapsedTimeMinutes by remember { mutableStateOf(if (reminder.minElapsedTimeMinutes > 0) reminder.minElapsedTimeMinutes.toString() else "10") }
+    val minElapsedTimeError = minElapsedTimeEnabled && (minElapsedTimeMinutes.toIntOrNull() == null || (minElapsedTimeMinutes.toIntOrNull() ?: -1) < 0)
 
     val profile by karooSystem.streamUserProfile().collectAsStateWithLifecycle(null)
 
@@ -121,7 +124,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             smoothSetting = smoothSetting,
             trigger = selectedTrigger,
             isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15,
-            enabledRideProfiles = enabledRideProfiles.toSet())
+            enabledRideProfiles = enabledRideProfiles.toSet(),
+            minElapsedTimeMinutes = if (minElapsedTimeEnabled) maxOf(0, minElapsedTimeMinutes.toIntOrNull() ?: 0) else 0)
     }
 
     Column(modifier = Modifier
@@ -264,6 +268,26 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                 )
             }
 
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(checked = minElapsedTimeEnabled, onCheckedChange = { minElapsedTimeEnabled = it })
+                Spacer(modifier = Modifier.width(10.dp))
+                Text("Delay first alert")
+            }
+
+            if (minElapsedTimeEnabled) {
+                OutlinedTextField(
+                    value = minElapsedTimeMinutes,
+                    modifier = Modifier.fillMaxWidth(),
+                    onValueChange = { minElapsedTimeMinutes = it },
+                    label = { Text("Minimum elapsed time") },
+                    suffix = { Text("min") },
+                    isError = minElapsedTimeError,
+                    supportingText = if (minElapsedTimeError) {{ Text("Enter a positive number") }} else null,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+            }
+
             Column(modifier = Modifier.fillMaxWidth()) {
                 if (enabledRideProfiles.isEmpty()) {
                     Text("Enabled for all profiles")
@@ -307,7 +331,9 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
 
             FilledTonalButton(modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp), onClick = {
+                .height(50.dp),
+                enabled = !minElapsedTimeError,
+                onClick = {
                 onSubmit(getUpdatedReminder())
             }) {
                 Icon(Icons.Default.Done, contentDescription = "Save Reminder")
