@@ -145,7 +145,9 @@ class Reminder(val id: Int, var name: String,
                val autoDismissSeconds: Int = 15,
                val enabledRideProfiles: Set<String> = emptySet(),
                /** Minimum elapsed ride time in minutes before the first alert fires. 0 = no minimum. */
-               val minElapsedTimeMinutes: Int = 0)
+               val minElapsedTimeMinutes: Int = 0,
+               /** If true, the reminder fires only once per ride instead of repeating/recurring. */
+               val fireOnce: Boolean = false)
 
 val defaultReminders = Json.encodeToString(listOf(Reminder(0, "Drink", 30, text = "Take a sip!")))
 

@@ -175,6 +175,18 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
     private var mediaPlayer: MediaPlayer? = null
 
+    /** Ids of fire-once reminders that have already fired during the current ride. Cleared when the ride resets (RideState.Idle). */
+    private val firedOnceIds = java.util.Collections.synchronizedSet(mutableSetOf<Int>())
+
+    /**
+     * Returns true if this reminder is configured to fire once and has already fired this ride,
+     * meaning it should be skipped. Otherwise records the fire and allows it.
+     */
+    private fun shouldSuppressFireOnce(reminder: Reminder): Boolean {
+        if (!reminder.fireOnce) return false
+        return !firedOnceIds.add(reminder.id)
+    }
+
     private suspend fun receiverWorker() {
         for(displayedReminder in reminderChannel) {
             Log.i(TAG, "Dispatching reminder: ${displayedReminder.alert.title}")
@@ -213,6 +225,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
     private lateinit var receiveJob: Job
     private lateinit var triggerStreamJob: Job
+    private lateinit var fireOnceResetJob: Job
 
     override fun onCreate() {
         super.onCreate()
@@ -223,6 +236,18 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
 
         receiveJob = CoroutineScope(Dispatchers.IO).launch {
             receiverWorker()
+        }
+
+        fireOnceResetJob = CoroutineScope(Dispatchers.IO).launch {
+            karooSystem.streamRideState()
+                .distinctUntilChanged()
+                .collect { rideState ->
+                    // RideState.Idle means recording has not started yet or has finished,
+                    // so reset fire-once tracking for the next ride.
+                    if (rideState is RideState.Idle) {
+                        firedOnceIds.clear()
+                    }
+                }
         }
 
         karooSystem.connect { connected ->
@@ -342,6 +367,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                         }
 
                     for (reminder in rs) {
+                        if (shouldSuppressFireOnce(reminder)) continue
                         Log.i(TAG, "$trigger reminder: ${reminder.name}")
                         reminderChannel.send(
                             DisplayedReminder(
@@ -471,6 +497,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
                 }
                 .collectLatest { reminders ->
                     reminders.forEach { reminder ->
+                        if (shouldSuppressFireOnce(reminder)) return@forEach
                         Log.d(TAG, "Dispatching reminder: ${reminder.name}")
                         reminderChannel.send(
                             DisplayedReminder(
@@ -493,6 +520,7 @@ class KarooReminderExtension : KarooExtension("karoo-reminder", BuildConfig.VERS
     override fun onDestroy() {
         receiveJob.cancel()
         triggerStreamJob.cancel()
+        fireOnceResetJob.cancel()
 
         karooSystem.disconnect()
         super.onDestroy()

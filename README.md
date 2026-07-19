@@ -9,7 +9,7 @@ Karoo extension that displays in-ride alerts based on custom triggers. Reminders
 > [!NOTE]
 > In 2026, Hammerhead added native custom alerts to the Karoo, so this extension is mostly obsolete. More information available in the [Hammerhead Documentation](https://support.hammerhead.io/hc/en-us/articles/44288796614299-Karoo-OS-Custom-Alerts).
 
-Note that interval and distance reminders repeat at the specified intervals or distances, eg. every 10 minutes, or every 10 miles/kilometers, for example.
+Note that interval and distance reminders repeat at the specified intervals or distances, eg. every 10 minutes, or every 10 miles/kilometers, for example. If you prefer a reminder to alert only a single time per ride, enable the "Fire once per ride" option in the reminder settings; it will re-arm automatically when a new ride is started.
 
 By default, created reminders are active for all ride profiles. If you want to limit reminders to specific ride profiles (e. g. your "Gravel" profile), you can do so in the reminder settings.
 

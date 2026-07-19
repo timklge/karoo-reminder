@@ -98,6 +98,7 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
     var smoothSetting by remember { mutableStateOf(reminder.smoothSetting) }
     var isActive by remember { mutableStateOf(reminder.isActive) }
     var autoDismiss by remember { mutableStateOf(reminder.isAutoDismiss) }
+    var fireOnce by remember { mutableStateOf(reminder.fireOnce) }
     var deleteDialogVisible by remember { mutableStateOf(false) }
     var toneDialogVisible by remember { mutableStateOf(false) }
     var triggerDialogVisible by remember { mutableStateOf(false) }
@@ -125,7 +126,8 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
             trigger = selectedTrigger,
             isAutoDismiss = autoDismiss, tone = selectedTone, autoDismissSeconds = autoDismissSeconds.toIntOrNull() ?: 15,
             enabledRideProfiles = enabledRideProfiles.toSet(),
-            minElapsedTimeMinutes = if (minElapsedTimeEnabled) maxOf(0, minElapsedTimeMinutes.toIntOrNull() ?: 0) else 0)
+            minElapsedTimeMinutes = if (minElapsedTimeEnabled) maxOf(0, minElapsedTimeMinutes.toIntOrNull() ?: 0) else 0,
+            fireOnce = fireOnce)
     }
 
     Column(modifier = Modifier
@@ -286,6 +288,12 @@ fun DetailScreen(isCreating: Boolean, reminder: Reminder, onSubmit: (updatedRemi
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true
                 )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(checked = fireOnce, onCheckedChange = { fireOnce = it })
+                Spacer(modifier = Modifier.width(10.dp))
+                Text("Fire once per ride")
             }
 
             Column(modifier = Modifier.fillMaxWidth()) {
